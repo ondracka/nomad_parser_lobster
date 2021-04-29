@@ -24,7 +24,6 @@ from nomad.datamodel import EntryArchive
 from nomad.units import ureg as units
 
 from lobsterparser import LobsterParser
-from lobsterparser.metainfo import x_lobster_section_icohplist, x_lobster_section_icooplist
 
 A = (1 * units.angstrom).to_base_units().magnitude
 eV = (1 * units.eV).to_base_units().magnitude

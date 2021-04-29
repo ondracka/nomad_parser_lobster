@@ -20,7 +20,6 @@ import numpy as np
 
 from nomad.metainfo import Section, Quantity, MSection, SubSection, SectionProxy
 from nomad.datamodel.metainfo import public
-from nomad.metainfo.legacy import LegacyDefinition
 
 
 class section_single_configuration_calculation(public.section_single_configuration_calculation):
