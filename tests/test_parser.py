@@ -50,7 +50,7 @@ def approx(value):
 def test_Fe(parser):
 
     archive = EntryArchive()
-    parser.run('tests/Fe/lobsterout', archive, logging)
+    parser.parse('tests/Fe/lobsterout', archive, logging)
 
     run = archive.section_run[0]
     assert run.program_name == "LOBSTER"
@@ -156,7 +156,7 @@ def test_Fe(parser):
 def test_NaCl(parser):
 
     archive = EntryArchive()
-    parser.run('tests/NaCl/lobsterout', archive, logging)
+    parser.parse('tests/NaCl/lobsterout', archive, logging)
 
     run = archive.section_run[0]
     assert run.program_name == "LOBSTER"

@@ -145,11 +145,11 @@ class LobsterParser(FairdiParser):
         super().__init__(
             name='parsers/lobster', code_name='LOBSTER',
             code_homepage='http://schmeling.ac.rwth-aachen.de/cohp/',
-            mainfile_mime_re=r'(text/.*)',
+            mainfile_name_re=r'.*lobsterout$',
             mainfile_contents_re=(r'^LOBSTER\s*v[\d\.]+.*'),
         )
 
-    def run(self, mainfile: str, archive: EntryArchive, logger):
+    def parse(self, mainfile: str, archive: EntryArchive, logger):
         mainfile_parser.mainfile = mainfile
         mainfile_path = path.dirname(mainfile)
         mainfile_parser.parse()
@@ -170,7 +170,7 @@ class LobsterParser(FairdiParser):
         if code == 'VASP':
             structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
         else:
-            self.logger.warning('parsing of {} structure is not supported'.format(code))
+            logger.warning('parsing of {} structure is not supported'.format(code))
         if structure is not None:
             system.lattice_vectors = structure.get_cell() * units.angstrom
             system.atom_labels = structure.get_chemical_symbols()

@@ -28,5 +28,5 @@ from lobsterparser import LobsterParser
 if __name__ == "__main__":
     configure_logging(console_log_level=logging.DEBUG)
     archive = EntryArchive()
-    LobsterParser().run(sys.argv[1], archive, logging)
+    LobsterParser().parse(sys.argv[1], archive, logging)
     json.dump(archive.m_to_dict(), sys.stdout, indent=2)
