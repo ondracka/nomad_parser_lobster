@@ -127,7 +127,7 @@ mainfile_parser = UnstructuredTextFileParser(quantities=[
     Quantity('datetime', r'starting on host \S* on (\d{4}-\d\d-\d\d\sat\s\d\d:\d\d:\d\d)\s[A-Z]{3,4}',
              repeats=False),
     Quantity('x_lobster_code',
-             r'detecting used PAW program... (\S*)', repeats=False),
+             r'detecting used PAW program... (.*)', repeats=False),
     Quantity('spilling', r'((?:spillings|abs. tot)[\s\S]*?charge\s*spilling:\s*\d+\.\d+%)',
              repeats=True,
              sub_parser=UnstructuredTextFileParser(quantities=[
@@ -165,15 +165,17 @@ class LobsterParser(FairdiParser):
                                           '%Y-%m-%d at %H:%M:%S') - datetime.datetime(1970, 1, 1)
         run.time_run_cpu1_start = date.total_seconds()
 
-        # FIXME: should this even be here, or do we depend on the VASP parser for parsing the structure
         system = run.m_create(System)
         code = mainfile_parser.get('x_lobster_code')
         if code == 'VASP':
             structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
-        system.lattice_vectors = structure.get_cell() * units.angstrom
-        system.atom_labels = structure.get_chemical_symbols()
-        system.configuration_periodic_dimensions = structure.get_pbc()
-        system.atom_positions = structure.get_positions() * units.angstrom
+        else:
+            self.logger.warning('parsing of {} structure is not supported'.format(code))
+        if structure is not None:
+            system.lattice_vectors = structure.get_cell() * units.angstrom
+            system.atom_labels = structure.get_chemical_symbols()
+            system.configuration_periodic_dimensions = structure.get_pbc()
+            system.atom_positions = structure.get_positions() * units.angstrom
 
         if mainfile_parser.get('finished') is not None:
             run.run_clean_end = True
