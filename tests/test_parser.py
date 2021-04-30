@@ -235,8 +235,8 @@ def test_NaCl(parser):
     assert np.shape(mulliken.atomic_multipole_values) == (1, 8)
     # here the approx is not really working (changing the 0.78 to for example
     # 10 makes the test still pass)
-    assert mulliken.atomic_multipole_values[0][0] == pytest.approx(0.78 * e)
-    assert mulliken.atomic_multipole_values[0][7] == pytest.approx(-0.78 * e)
+    assert mulliken.atomic_multipole_values[0][0] == nomad_approx(0.78 * e)
+    assert mulliken.atomic_multipole_values[0][7] == nomad_approx(-0.78 * e)
 
     loewdin = atomic_multipoles[1]
     assert loewdin.atomic_multipole_kind == "loewdin"
@@ -245,9 +245,5 @@ def test_NaCl(parser):
     assert all([a == b for a, b in zip(
         loewdin.atomic_multipole_lm[0], [0, 0])])
     assert np.shape(loewdin.atomic_multipole_values) == (1, 8)
-    assert loewdin.atomic_multipole_values[0][0] == pytest.approx(0.67 * e)
-    assert loewdin.atomic_multipole_values[0][1] == pytest.approx(-0.67 * e)
-
-
-def test_example(parser):
-    test_Fe(parser)
+    assert loewdin.atomic_multipole_values[0][0] == nomad_approx(0.67 * e)
+    assert loewdin.atomic_multipole_values[0][7] == nomad_approx(-0.67 * e)
