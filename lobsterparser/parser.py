@@ -165,13 +165,16 @@ class LobsterParser(FairdiParser):
                                           '%Y-%m-%d at %H:%M:%S') - datetime.datetime(1970, 1, 1)
         run.time_run_cpu1_start = date.total_seconds()
 
-        system = run.m_create(System)
         code = mainfile_parser.get('x_lobster_code')
         if code == 'VASP':
-            structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
+            try:
+                structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
+            except FileNotFoundError:
+                logger.warning('Unable to parse structure info, no CONTCAR detected')
         else:
-            logger.warning('parsing of {} structure is not supported'.format(code))
-        if structure is not None:
+            logger.warning('Parsing of {} structure is not supported'.format(code))
+        if 'structure' in locals():
+            system = run.m_create(System)
             system.lattice_vectors = structure.get_cell() * units.angstrom
             system.atom_labels = structure.get_chemical_symbols()
             system.configuration_periodic_dimensions = structure.get_pbc()
@@ -183,7 +186,8 @@ class LobsterParser(FairdiParser):
             run.run_clean_end = False
 
         scc = run.m_create(SCC)
-        scc.single_configuration_calculation_to_system_ref = system
+        if 'system' in locals():
+            scc.single_configuration_calculation_to_system_ref = system
         method = run.m_create(Method)
 
         spilling = mainfile_parser.get('spilling')
