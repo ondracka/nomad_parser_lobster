@@ -32,7 +32,7 @@ from nomad.datamodel.metainfo.public import section_atomic_multipoles
 
 from nomad.parsing.file_parser import UnstructuredTextFileParser, Quantity
 
-from .metainfo import x_lobster_section_icohplist, x_lobster_section_icooplist
+from .metainfo.lobster import x_lobster_section_icohplist, x_lobster_section_icooplist
 
 '''
 This is a LOBSTER code parser.
