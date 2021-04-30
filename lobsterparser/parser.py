@@ -124,7 +124,7 @@ def parse_CHARGE(fname, scc):
 
 mainfile_parser = UnstructuredTextFileParser(quantities=[
     Quantity('program_version', r'^LOBSTER\s*v([\d\.]+)\s*', repeats=False),
-    Quantity('datetime', r'starting on host \S* on (\d{4}-\d\d-\d\d\sat\s\d\d:\d\d:\d\d\s[A-Z]{3,4})',
+    Quantity('datetime', r'starting on host \S* on (\d{4}-\d\d-\d\d\sat\s\d\d:\d\d:\d\d)\s[A-Z]{3,4}',
              repeats=False),
     Quantity('x_lobster_code',
              r'detecting used PAW program... (\S*)', repeats=False),
@@ -158,9 +158,11 @@ class LobsterParser(FairdiParser):
 
         run.program_name = 'LOBSTER'
         run.program_version = str(mainfile_parser.get('program_version'))
-        # FIXME: this doesn't support some timezones, for example CEST
+        # FIXME: There is a timezone info present as well, but datetime support for timezones
+        # is bad and it doesn't support some timezones (for example CEST).
+        # That leads to test failures, so ignore it for now.
         date = datetime.datetime.strptime(' '.join(mainfile_parser.get('datetime')),
-                                          '%Y-%m-%d at %H:%M:%S %Z') - datetime.datetime(1970, 1, 1)
+                                          '%Y-%m-%d at %H:%M:%S') - datetime.datetime(1970, 1, 1)
         run.time_run_cpu1_start = date.total_seconds()
 
         # FIXME: should this even be here, or do we depend on the VASP parser for parsing the structure
