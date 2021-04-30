@@ -38,9 +38,6 @@ from .metainfo import x_lobster_section_icohplist, x_lobster_section_icooplist
 This is a LOBSTER code parser.
 '''
 
-# FIXME: its unclear how to treat the units for the numpy arrays
-A = (1 * units.angstrom).to_base_units().magnitude
-eV = (1 * units.eV).to_base_units().magnitude
 e = (1 * units.e).to_base_units().magnitude
 
 
@@ -85,14 +82,14 @@ def parse_ICOXPLIST(fname, scc, method):
             setattr(section, "x_lobster_ico{}p_atom2_labels".format(
                 method), list(a2))
             setattr(section, "x_lobster_ico{}p_distances".format(
-                method), np.array(distances) * A)
+                method), np.array(distances) * units.angstrom)
 
             setattr(section, "x_lobster_ico{}p_translations".format(
                 method), list(v))
 
     if len(icoxp) > 0:
         setattr(section, "x_lobster_ico{}p_values".format(
-            method), np.array(icoxp) * eV)
+            method), np.array(icoxp) * units.eV)
 
 
 def parse_CHARGE(fname, scc):
@@ -112,6 +109,8 @@ def parse_CHARGE(fname, scc):
         scc.section_atomic_multipoles[0].atomic_multipole_m_kind = "integrated"
         scc.section_atomic_multipoles[0].atomic_multipole_lm = np.array([[0, 0]])
         scc.section_atomic_multipoles[0].number_of_lm_atomic_multipoles = 1
+        # FIXME: the mulliken charge has an obvious unit, but section_atomic_multipoles.atomic_multipole_values
+        # is unitless currently
         scc.section_atomic_multipoles[0].atomic_multipole_values = np.array(
             [list(zip(*charges))[0]]) * e
         # FIXME: Loewdin charge might not be allowed here according to the wiki?

@@ -84,7 +84,8 @@ class x_lobster_section_icohplist(MSection):
         ''')
 
     x_lobster_icohp_distances = Quantity(
-        type=float,
+        type=np.dtype(np.float32),
+        unit='meter',
         shape=['x_lobster_number_of_icohp_values'],
         description='''
         Distance between the atom pair for which is the specific iCOHP calculated
@@ -99,6 +100,7 @@ class x_lobster_section_icohplist(MSection):
 
     x_lobster_icohp_values = Quantity(
         type=np.dtype(np.float32),
+        unit='joule',
         shape=['number_of_spin_channels', 'x_lobster_number_of_icohp_values'],
         description='''
         Calculated iCOHPs
@@ -129,7 +131,8 @@ class x_lobster_section_icooplist(MSection):
         ''')
 
     x_lobster_icoop_distances = Quantity(
-        type=float,
+        type=np.dtype(np.float32),
+        unit='meter',
         shape=['x_lobster_number_of_icoop_values'],
         description='''
         Distance between the atom pair for which is the specific iCOOP calculated
@@ -144,6 +147,7 @@ class x_lobster_section_icooplist(MSection):
 
     x_lobster_icoop_values = Quantity(
         type=np.dtype(np.float32),
+        unit='joule',
         shape=['number_of_spin_channels', 'x_lobster_number_of_icoop_values'],
         description='''
         Calculated iCOOPs
