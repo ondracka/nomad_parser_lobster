@@ -43,7 +43,7 @@ def eV_to_J(value):
 
 # default pytest.approx settings are abs=1e-12, rel=1e-6 so it doesn't work for small numbers
 # use the default just for comparison with zero
-def nomad_approx(value):
+def approx(value):
     return pytest.approx(value, abs=0, rel=1e-6)
 
 
@@ -61,11 +61,11 @@ def test_Fe(parser):
     assert len(run.section_single_configuration_calculation) == 1
     scc = run.section_single_configuration_calculation[0]
     assert len(scc.x_lobster_abs_total_spilling) == 2
-    assert scc.x_lobster_abs_total_spilling[0] == nomad_approx(8.02)
-    assert scc.x_lobster_abs_total_spilling[1] == nomad_approx(8.96)
+    assert scc.x_lobster_abs_total_spilling[0] == approx(8.02)
+    assert scc.x_lobster_abs_total_spilling[1] == approx(8.96)
     assert len(scc.x_lobster_abs_charge_spilling) == 2
-    assert scc.x_lobster_abs_charge_spilling[0] == nomad_approx(2.97)
-    assert scc.x_lobster_abs_charge_spilling[1] == nomad_approx(8.5)
+    assert scc.x_lobster_abs_charge_spilling[0] == approx(2.97)
+    assert scc.x_lobster_abs_charge_spilling[1] == approx(8.5)
 
     method = run.section_method
     assert len(method) == 1
@@ -79,11 +79,11 @@ def test_Fe(parser):
     assert len(icohplist.x_lobster_icohp_atom2_labels) == 20
     assert icohplist.x_lobster_icohp_atom1_labels[3] == "Fe1"
     assert len(icohplist.x_lobster_icohp_distances) == 20
-    assert icohplist.x_lobster_icohp_distances[0].magnitude == nomad_approx(
+    assert icohplist.x_lobster_icohp_distances[0].magnitude == approx(
         A_to_m(2.83178))
-    assert icohplist.x_lobster_icohp_distances[13].magnitude == nomad_approx(
+    assert icohplist.x_lobster_icohp_distances[13].magnitude == approx(
         A_to_m(2.45239))
-    assert icohplist.x_lobster_icohp_distances[19].magnitude == nomad_approx(
+    assert icohplist.x_lobster_icohp_distances[19].magnitude == approx(
         A_to_m(2.83178))
     assert np.shape(icohplist.x_lobster_icohp_translations) == (20, 3)
     assert all([a == b for a, b in zip(
@@ -93,10 +93,10 @@ def test_Fe(parser):
     assert all([a == b for a, b in zip(
         icohplist.x_lobster_icohp_translations[19], [0, 0, 1])])
     assert np.shape(icohplist.x_lobster_icohp_values) == (2, 20)
-    assert icohplist.x_lobster_icohp_values[0, 0].magnitude == nomad_approx(eV_to_J(-0.08672))
-    assert icohplist.x_lobster_icohp_values[0, 19].magnitude == nomad_approx(eV_to_J(-0.08672))
-    assert icohplist.x_lobster_icohp_values[1, 19].magnitude == nomad_approx(eV_to_J(-0.16529))
-    assert icohplist.x_lobster_icohp_values[1, 7].magnitude == nomad_approx(eV_to_J(-0.48790))
+    assert icohplist.x_lobster_icohp_values[0, 0].magnitude == approx(eV_to_J(-0.08672))
+    assert icohplist.x_lobster_icohp_values[0, 19].magnitude == approx(eV_to_J(-0.08672))
+    assert icohplist.x_lobster_icohp_values[1, 19].magnitude == approx(eV_to_J(-0.16529))
+    assert icohplist.x_lobster_icohp_values[1, 7].magnitude == approx(eV_to_J(-0.48790))
 
     # ICOOPLIST.lobster
     icooplist = scc.x_lobster_section_icooplist
@@ -106,11 +106,11 @@ def test_Fe(parser):
     assert len(icooplist.x_lobster_icoop_atom2_labels) == 20
     assert icooplist.x_lobster_icoop_atom1_labels[3] == "Fe1"
     assert len(icooplist.x_lobster_icoop_distances) == 20
-    assert icooplist.x_lobster_icoop_distances[0].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_distances[0].magnitude == approx(
         A_to_m(2.83178))
-    assert icooplist.x_lobster_icoop_distances[13].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_distances[13].magnitude == approx(
         A_to_m(2.45239))
-    assert icooplist.x_lobster_icoop_distances[19].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_distances[19].magnitude == approx(
         A_to_m(2.83178))
     assert np.shape(icooplist.x_lobster_icoop_translations) == (20, 3)
     assert all([a == b for a, b in zip(
@@ -120,13 +120,13 @@ def test_Fe(parser):
     assert all([a == b for a, b in zip(
         icooplist.x_lobster_icoop_translations[19], [0, 0, 1])])
     assert np.shape(icooplist.x_lobster_icoop_values) == (2, 20)
-    assert icooplist.x_lobster_icoop_values[0, 0].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_values[0, 0].magnitude == approx(
         eV_to_J(-0.06882))
-    assert icooplist.x_lobster_icoop_values[0, 19].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_values[0, 19].magnitude == approx(
         eV_to_J(-0.06882))
-    assert icooplist.x_lobster_icoop_values[1, 19].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_values[1, 19].magnitude == approx(
         eV_to_J(-0.11268))
-    assert icooplist.x_lobster_icoop_values[1, 7].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_values[1, 7].magnitude == approx(
         eV_to_J(-0.05179))
 
     # CHARGE.lobster
@@ -167,9 +167,9 @@ def test_NaCl(parser):
     assert len(run.section_single_configuration_calculation) == 1
     scc = run.section_single_configuration_calculation[0]
     assert len(scc.x_lobster_abs_total_spilling) == 1
-    assert scc.x_lobster_abs_total_spilling[0] == nomad_approx(9.29)
+    assert scc.x_lobster_abs_total_spilling[0] == approx(9.29)
     assert len(scc.x_lobster_abs_charge_spilling) == 1
-    assert scc.x_lobster_abs_charge_spilling[0] == nomad_approx(0.58)
+    assert scc.x_lobster_abs_charge_spilling[0] == approx(0.58)
 
     method = run.section_method
     assert len(method) == 1
@@ -183,9 +183,9 @@ def test_NaCl(parser):
     assert len(icohplist.x_lobster_icohp_atom2_labels) == 72
     assert icohplist.x_lobster_icohp_atom2_labels[43] == "Cl6"
     assert len(icohplist.x_lobster_icohp_distances) == 72
-    assert icohplist.x_lobster_icohp_distances[0].magnitude == nomad_approx(A_to_m(3.99586))
-    assert icohplist.x_lobster_icohp_distances[47].magnitude == nomad_approx(A_to_m(2.82550))
-    assert icohplist.x_lobster_icohp_distances[71].magnitude == nomad_approx(A_to_m(3.99586))
+    assert icohplist.x_lobster_icohp_distances[0].magnitude == approx(A_to_m(3.99586))
+    assert icohplist.x_lobster_icohp_distances[47].magnitude == approx(A_to_m(2.82550))
+    assert icohplist.x_lobster_icohp_distances[71].magnitude == approx(A_to_m(3.99586))
     assert np.shape(icohplist.x_lobster_icohp_translations) == (72, 3)
     assert all([a == b for a, b in zip(
         icohplist.x_lobster_icohp_translations[0], [-1, 0, 0])])
@@ -194,9 +194,9 @@ def test_NaCl(parser):
     assert all([a == b for a, b in zip(
         icohplist.x_lobster_icohp_translations[71], [0, 1, 0])])
     assert np.shape(icohplist.x_lobster_icohp_values) == (1, 72)
-    assert icohplist.x_lobster_icohp_values[0, 0].magnitude == nomad_approx(
+    assert icohplist.x_lobster_icohp_values[0, 0].magnitude == approx(
         eV_to_J(-0.02652))
-    assert icohplist.x_lobster_icohp_values[0, 71].magnitude == nomad_approx(
+    assert icohplist.x_lobster_icohp_values[0, 71].magnitude == approx(
         eV_to_J(-0.02925))
 
     # ICOOPLIST.lobster
@@ -207,9 +207,9 @@ def test_NaCl(parser):
     assert len(icooplist.x_lobster_icoop_atom2_labels) == 72
     assert icooplist.x_lobster_icoop_atom2_labels[0] == "Na2"
     assert len(icooplist.x_lobster_icoop_distances) == 72
-    assert icooplist.x_lobster_icoop_distances[0].magnitude == nomad_approx(A_to_m(3.99586))
-    assert icooplist.x_lobster_icoop_distances[12].magnitude == nomad_approx(A_to_m(2.82550))
-    assert icooplist.x_lobster_icoop_distances[71].magnitude == nomad_approx(A_to_m(3.99586))
+    assert icooplist.x_lobster_icoop_distances[0].magnitude == approx(A_to_m(3.99586))
+    assert icooplist.x_lobster_icoop_distances[12].magnitude == approx(A_to_m(2.82550))
+    assert icooplist.x_lobster_icoop_distances[71].magnitude == approx(A_to_m(3.99586))
     assert np.shape(icooplist.x_lobster_icoop_translations) == (72, 3)
     assert all([a == b for a, b in zip(
         icooplist.x_lobster_icoop_translations[0], [-1, 0, 0])])
@@ -218,9 +218,9 @@ def test_NaCl(parser):
     assert all([a == b for a, b in zip(
         icooplist.x_lobster_icoop_translations[71], [0, 1, 0])])
     assert np.shape(icooplist.x_lobster_icoop_values) == (1, 72)
-    assert icooplist.x_lobster_icoop_values[0, 0].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_values[0, 0].magnitude == approx(
         eV_to_J(-0.00519))
-    assert icooplist.x_lobster_icoop_values[0, 71].magnitude == nomad_approx(
+    assert icooplist.x_lobster_icoop_values[0, 71].magnitude == approx(
         eV_to_J(-0.00580))
 
     # CHARGE.lobster
@@ -235,8 +235,8 @@ def test_NaCl(parser):
     assert np.shape(mulliken.atomic_multipole_values) == (1, 8)
     # here the approx is not really working (changing the 0.78 to for example
     # 10 makes the test still pass)
-    assert mulliken.atomic_multipole_values[0][0] == nomad_approx(0.78 * e)
-    assert mulliken.atomic_multipole_values[0][7] == nomad_approx(-0.78 * e)
+    assert mulliken.atomic_multipole_values[0][0] == approx(0.78 * e)
+    assert mulliken.atomic_multipole_values[0][7] == approx(-0.78 * e)
 
     loewdin = atomic_multipoles[1]
     assert loewdin.atomic_multipole_kind == "loewdin"
@@ -245,5 +245,5 @@ def test_NaCl(parser):
     assert all([a == b for a, b in zip(
         loewdin.atomic_multipole_lm[0], [0, 0])])
     assert np.shape(loewdin.atomic_multipole_values) == (1, 8)
-    assert loewdin.atomic_multipole_values[0][0] == nomad_approx(0.67 * e)
-    assert loewdin.atomic_multipole_values[0][7] == nomad_approx(-0.67 * e)
+    assert loewdin.atomic_multipole_values[0][0] == approx(0.67 * e)
+    assert loewdin.atomic_multipole_values[0][7] == approx(-0.67 * e)
