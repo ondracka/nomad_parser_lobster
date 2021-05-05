@@ -28,7 +28,7 @@ from nomad.datamodel.metainfo.public import section_run as Run
 from nomad.datamodel.metainfo.public import section_system as System
 from nomad.datamodel.metainfo.public import section_method as Method
 from nomad.datamodel.metainfo.public import section_single_configuration_calculation as SCC
-from nomad.datamodel.metainfo.public import section_atomic_multipoles
+from nomad.datamodel.metainfo.public import section_atomic_multipoles, section_dos
 
 from nomad.parsing.file_parser import UnstructuredTextFileParser, Quantity
 
@@ -39,6 +39,7 @@ This is a LOBSTER code parser.
 '''
 
 e = (1 * units.e).to_base_units().magnitude
+eV = (1 * units.eV).to_base_units().magnitude
 
 
 def parse_ICOXPLIST(fname, scc, method):
@@ -109,8 +110,8 @@ def parse_CHARGE(fname, scc):
         scc.section_atomic_multipoles[0].atomic_multipole_m_kind = "integrated"
         scc.section_atomic_multipoles[0].atomic_multipole_lm = np.array([[0, 0]])
         scc.section_atomic_multipoles[0].number_of_lm_atomic_multipoles = 1
-        # FIXME: the mulliken charge has an obvious unit, but section_atomic_multipoles.atomic_multipole_values
-        # is unitless currently
+        # FIXME: the mulliken charge has an obvious unit,
+        # but section_atomic_multipoles.atomic_multipole_values is unitless currently
         scc.section_atomic_multipoles[0].atomic_multipole_values = np.array(
             [list(zip(*charges))[0]]) * e
         # FIXME: Loewdin charge might not be allowed here according to the wiki?
@@ -120,6 +121,65 @@ def parse_CHARGE(fname, scc):
         scc.section_atomic_multipoles[1].number_of_lm_atomic_multipoles = 1
         scc.section_atomic_multipoles[1].atomic_multipole_values = np.array(
             [list(zip(*charges))[1]]) * e
+
+
+def parse_DOSCAR(fname, scc, logger):
+    with open(fname) as f:
+        energies = []
+        dos_values = []
+        integral_dos = []
+        atom_projected_dos_values = []
+        atom_index = 0
+        atomic_numbers = []
+        lms = []
+        for i, line in enumerate(f):
+            if i == 0:
+                n_atoms = int(line.split()[0])
+            if i == 1:
+                cell_volume = float(line.split()[0]) * units.angstrom**3
+            if i == 5:
+                n_dos = int(line.split()[2])
+            if 'Z=' in line:
+                atom_index += 1
+                atom_projected_dos_values.append([])
+                lms.append((line.split(';')[-1]).split())
+                atomic_numbers.append(int(line.split(';')[-2].split('=')[1]))
+                continue
+            if i > 5:
+                line = [float(x) for x in line.split()]
+                if atom_index == 0:
+                    energies.append(line[0])
+                    if len(line) == 3:
+                        dos_values.append([line[1]])
+                        integral_dos.append([line[2]])
+                    elif len(line) == 5:
+                        dos_values.append([line[1], line[2]])
+                        integral_dos.append([line[3], line[4]])
+                else:
+                    atom_projected_dos_values[-1].append([line[1:]])
+
+        if len(dos_values) == n_dos:
+            dos = scc.m_create(section_dos)
+            dos.dos_kind = 'electronic'
+            dos.number_of_dos_values = n_dos
+            dos.dos_energies = energies * units.eV
+            dos.dos_values = np.array(list(zip(*dos_values))) / eV
+            # FIXME: it is not clear if we should do this or if this is done
+            # by normalizer (LOBSTER energies are already normalized)
+            dos.dos_energies_normalized = energies * units.eV
+            dos.dos_values_normalized = dos.dos_values / cell_volume.to_base_units().magnitude / n_atoms
+            # FIXME: the usage of other parsers and definition of dos_integrated_values
+            # is inconsistent, recheck later when it is cleared, follow the definition
+            # for now (add the core electrons)
+            n_electrons = sum(atomic_numbers)
+            index = (np.abs(energies)).argmin()
+            # integrated dos at the Fermi level should be the number of electrons
+            n_valence_electrons = int(round(sum(integral_dos[index])))
+            n_core_electrons = n_electrons - n_valence_electrons
+            dos.dos_integrated_values = np.array(list(zip(*integral_dos))) + n_core_electrons / len(integral_dos[0])
+        else:
+            logger.warning('Unable to parse DOSCAR, it doesn\'t contain enough dos values')
+            return
 
 
 mainfile_parser = UnstructuredTextFileParser(quantities=[
@@ -214,3 +274,5 @@ class LobsterParser(FairdiParser):
         parse_ICOXPLIST(mainfile_path + '/ICOOPLIST.lobster', scc, 'o')
 
         parse_CHARGE(mainfile_path + '/CHARGE.lobster', scc)
+
+        parse_DOSCAR(mainfile_path + '/DOSCAR.lobster', scc, logger)

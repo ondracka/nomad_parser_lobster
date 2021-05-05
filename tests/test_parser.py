@@ -26,6 +26,7 @@ from nomad.units import ureg as units
 from lobsterparser import LobsterParser
 
 e = (1 * units.e).to_base_units().magnitude
+eV = (1 * units.e).to_base_units().magnitude
 
 
 @pytest.fixture
@@ -152,6 +153,23 @@ def test_Fe(parser):
     assert loewdin.atomic_multipole_values[0][0] == pytest.approx(0.0 * e, abs=1e-6)
     assert loewdin.atomic_multipole_values[0][1] == pytest.approx(0.0 * e, abs=1e-6)
 
+    # DOSCAR.lobster total and integrated DOS
+    assert len(scc.section_dos) == 1
+    dos = scc.section_dos[0]
+    assert dos.dos_kind == 'electronic'
+    assert len(dos.dos_energies) == 201
+    assert dos.dos_energies[0].magnitude == approx(eV_to_J(-10.06030))
+    assert dos.dos_energies[16].magnitude == approx(eV_to_J(-9.01508))
+    assert dos.dos_energies[200].magnitude == approx(eV_to_J(3.00503))
+    assert np.shape(dos.dos_values) == (2, 201)
+    assert dos.dos_values[0][6] == pytest.approx(0.0, abs=1e-30)
+    assert dos.dos_values[0][200] == approx(0.26779 / eV)
+    assert dos.dos_values[1][195] == approx(0.37457 / eV)
+    assert np.shape(dos.dos_integrated_values) == (2, 201)
+    assert dos.dos_integrated_values[0][10] == approx(0.0 + 18)
+    assert dos.dos_integrated_values[0][188] == approx(11.07792 + 18)
+    assert dos.dos_integrated_values[1][200] == approx(10.75031 + 18)
+
 
 def test_NaCl(parser):
 
@@ -247,3 +265,20 @@ def test_NaCl(parser):
     assert np.shape(loewdin.atomic_multipole_values) == (1, 8)
     assert loewdin.atomic_multipole_values[0][0] == approx(0.67 * e)
     assert loewdin.atomic_multipole_values[0][7] == approx(-0.67 * e)
+
+    # DOSCAR.lobster total and integrated DOS
+    assert len(scc.section_dos) == 1
+    dos = scc.section_dos[0]
+    assert dos.dos_kind == 'electronic'
+    assert len(dos.dos_energies) == 201
+    assert dos.dos_energies[0].magnitude == approx(eV_to_J(-12.02261))
+    assert dos.dos_energies[25].magnitude == approx(eV_to_J(-10.20101))
+    assert dos.dos_energies[200].magnitude == approx(eV_to_J(2.55025))
+    assert np.shape(dos.dos_values) == (1, 201)
+    assert dos.dos_values[0][6] == pytest.approx(0.0, abs=1e-30)
+    assert dos.dos_values[0][162] == approx(20.24722 / eV)
+    assert dos.dos_values[0][200] == pytest.approx(0.0, abs=1e-30)
+    assert np.shape(dos.dos_integrated_values) == (1, 201)
+    assert dos.dos_integrated_values[0][10] == approx(7.99998 + 80)
+    assert dos.dos_integrated_values[0][160] == approx(27.09225 + 80)
+    assert dos.dos_integrated_values[0][200] == approx(31.99992 + 80)
