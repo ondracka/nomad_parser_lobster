@@ -32,7 +32,8 @@ from nomad.datamodel.metainfo.public import section_atomic_multipoles, section_d
 
 from nomad.parsing.file_parser import UnstructuredTextFileParser, Quantity
 
-from .metainfo.lobster import x_lobster_section_icohplist, x_lobster_section_icooplist
+from .metainfo.lobster import x_lobster_section_icohplist, x_lobster_section_icooplist, \
+    x_lobster_section_atom_projected_dos
 
 '''
 This is a LOBSTER code parser.
@@ -124,6 +125,28 @@ def parse_CHARGE(fname, scc):
 
 
 def parse_DOSCAR(fname, scc, logger):
+
+    def translate_lm(lm):
+        lm_dictionary = {
+            's': [0, 0],
+            'p_z': [1, 0],
+            'p_x': [1, 1],
+            'p_y': [1, 2],
+            'd_z^2': [2, 0],
+            'd_xz': [2, 1],
+            'd_yz': [2, 2],
+            'd_xy': [2, 3],
+            'd_x^2-y^2': [2, 4],
+            'z^3': [3, 0],
+            'xz^2': [3, 1],
+            'yz^2': [3, 2],
+            'xyz': [3, 3],
+            'z(x^2-y^2)': [3, 4],
+            'x(x^2-3y^2)': [3, 5],
+            'y(3x^2-y^2)': [3, 6],
+        }
+        return lm_dictionary.get(lm[1:])
+
     with open(fname) as f:
         energies = []
         dos_values = []
@@ -156,7 +179,7 @@ def parse_DOSCAR(fname, scc, logger):
                         dos_values.append([line[1], line[2]])
                         integral_dos.append([line[3], line[4]])
                 else:
-                    atom_projected_dos_values[-1].append([line[1:]])
+                    atom_projected_dos_values[-1].append(line[1:])
 
         if len(dos_values) == n_dos:
             dos = scc.m_create(section_dos)
@@ -178,8 +201,35 @@ def parse_DOSCAR(fname, scc, logger):
             n_core_electrons = n_electrons - n_valence_electrons
             dos.dos_integrated_values = np.array(list(zip(*integral_dos))) + n_core_electrons / len(integral_dos[0])
         else:
-            logger.warning('Unable to parse DOSCAR, it doesn\'t contain enough dos values')
+            logger.warning('Unable to parse total dos from DOSCAR.lobster, \
+                            it doesn\'t contain enough dos values')
             return
+
+        for i, pdos in enumerate(atom_projected_dos_values):
+            if len(pdos) == n_dos:
+                section_pdos = scc.m_create(x_lobster_section_atom_projected_dos)
+                section_pdos.x_lobster_number_of_dos_values = n_dos
+                # FIXME: should the atoms be indexed from 0 or 1?
+                section_pdos.x_lobster_atom_projected_dos_atom_index = i + 1
+                section_pdos.x_lobster_atom_projected_dos_m_kind = 'real_orbital'
+                section_pdos.x_lobster_number_of_lm_atom_projected_dos = len(lms[i])
+                section_pdos.x_lobster_atom_projected_dos_energies = energies * units.eV
+                section_pdos.x_lobster_atom_projected_dos_lm = [translate_lm(lm) for lm in lms[i]]
+                if len(lms[i]) == len(pdos[0]):
+                    # we have the same lm-projections for spin up and dn
+                    section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
+                        [[lmdos] for lmdos in zip(*pdos)]) / eV
+                elif len(lms[i]) * 2 == len(pdos[0]):
+                    pdos_up = list(zip(*pdos))[0::2]
+                    pdos_dn = list(zip(*pdos))[1::2]
+                    section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
+                        [[a, b] for a, b in zip(pdos_up, pdos_dn)]) / eV
+                else:
+                    logger.warning('Unexpected number of columns in DOSCAR.lobster')
+                    return
+            else:
+                logger.warning('Unable to parse atom lm-projected dos from DOSCAR.lobster, \
+                                it doesn\'t contain enough dos values')
 
 
 mainfile_parser = UnstructuredTextFileParser(quantities=[

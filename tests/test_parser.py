@@ -157,6 +157,7 @@ def test_Fe(parser):
     assert len(scc.section_dos) == 1
     dos = scc.section_dos[0]
     assert dos.dos_kind == 'electronic'
+    assert dos.number_of_dos_values == 201
     assert len(dos.dos_energies) == 201
     assert dos.dos_energies[0].magnitude == approx(eV_to_J(-10.06030))
     assert dos.dos_energies[16].magnitude == approx(eV_to_J(-9.01508))
@@ -169,6 +170,38 @@ def test_Fe(parser):
     assert dos.dos_integrated_values[0][10] == approx(0.0 + 18)
     assert dos.dos_integrated_values[0][188] == approx(11.07792 + 18)
     assert dos.dos_integrated_values[1][200] == approx(10.75031 + 18)
+
+    # DOSCAR.lobster atom and lm-projected dos
+    assert len(scc.x_lobster_section_atom_projected_dos) == 2
+    ados1 = scc.x_lobster_section_atom_projected_dos[0]
+    ados2 = scc.x_lobster_section_atom_projected_dos[1]
+    ados1.x_lobster_atom_projected_dos_atom_index == 1
+    ados2.x_lobster_atom_projected_dos_atom_index == 2
+    assert ados2.x_lobster_number_of_dos_values == 201
+    assert len(ados2.x_lobster_atom_projected_dos_energies) == 201
+    assert ados2.x_lobster_atom_projected_dos_energies[0].magnitude == approx(
+        eV_to_J(-10.06030))
+    assert ados2.x_lobster_atom_projected_dos_energies[16].magnitude == approx(
+        eV_to_J(-9.01508))
+    assert ados1.x_lobster_atom_projected_dos_energies[200].magnitude == approx(
+        eV_to_J(3.00503))
+    assert ados2.x_lobster_atom_projected_dos_m_kind == 'real_orbital'
+    assert ados2.x_lobster_number_of_lm_atom_projected_dos == 6
+    assert np.shape(ados2.x_lobster_atom_projected_dos_lm) == (6, 2)
+    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
+        ados1.x_lobster_atom_projected_dos_lm,
+        [[0, 0], [2, 3], [2, 2], [2, 0], [2, 1], [2, 4]])])
+    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
+        ados2.x_lobster_atom_projected_dos_lm,
+        [[0, 0], [2, 3], [2, 2], [2, 0], [2, 1], [2, 4]])])
+    assert np.shape(ados1.x_lobster_atom_projected_dos_values_lm) == (6, 2, 201)
+    assert np.shape(ados2.x_lobster_atom_projected_dos_values_lm) == (6, 2, 201)
+    assert ados1.x_lobster_atom_projected_dos_values_lm[2, 1, 190] == approx(
+        0.21304 / eV)
+    assert ados2.x_lobster_atom_projected_dos_values_lm[5, 0, 200] == approx(
+        0.00784 / eV)
+    assert ados2.x_lobster_atom_projected_dos_values_lm[0, 1, 35] == approx(
+        0.01522 / eV)
 
 
 def test_NaCl(parser):
@@ -270,6 +303,7 @@ def test_NaCl(parser):
     assert len(scc.section_dos) == 1
     dos = scc.section_dos[0]
     assert dos.dos_kind == 'electronic'
+    assert dos.number_of_dos_values == 201
     assert len(dos.dos_energies) == 201
     assert dos.dos_energies[0].magnitude == approx(eV_to_J(-12.02261))
     assert dos.dos_energies[25].magnitude == approx(eV_to_J(-10.20101))
@@ -282,3 +316,37 @@ def test_NaCl(parser):
     assert dos.dos_integrated_values[0][10] == approx(7.99998 + 80)
     assert dos.dos_integrated_values[0][160] == approx(27.09225 + 80)
     assert dos.dos_integrated_values[0][200] == approx(31.99992 + 80)
+
+    # DOSCAR.lobster atom and lm-projected dos
+    assert len(scc.x_lobster_section_atom_projected_dos) == 8
+    ados1 = scc.x_lobster_section_atom_projected_dos[0]
+    ados8 = scc.x_lobster_section_atom_projected_dos[7]
+    ados1.x_lobster_atom_projected_dos_atom_index == 1
+    ados8.x_lobster_atom_projected_dos_atom_index == 8
+    assert ados8.x_lobster_number_of_dos_values == 201
+    assert len(ados8.x_lobster_atom_projected_dos_energies) == 201
+    assert ados1.x_lobster_atom_projected_dos_energies[0].magnitude == approx(
+        eV_to_J(-12.02261))
+    assert ados8.x_lobster_atom_projected_dos_energies[25].magnitude == approx(
+        eV_to_J(-10.20101))
+    assert ados8.x_lobster_atom_projected_dos_energies[200].magnitude == approx(
+        eV_to_J(2.55025))
+    assert ados8.x_lobster_atom_projected_dos_m_kind == 'real_orbital'
+    assert ados1.x_lobster_number_of_lm_atom_projected_dos == 1
+    assert ados8.x_lobster_number_of_lm_atom_projected_dos == 4
+    assert np.shape(ados1.x_lobster_atom_projected_dos_lm) == (1, 2)
+    assert np.shape(ados8.x_lobster_atom_projected_dos_lm) == (4, 2)
+    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
+        ados1.x_lobster_atom_projected_dos_lm,
+        [[0, 0]])])
+    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
+        ados8.x_lobster_atom_projected_dos_lm,
+        [[0, 0], [1, 2], [1, 0], [1, 1]])])
+    assert np.shape(ados1.x_lobster_atom_projected_dos_values_lm) == (1, 1, 201)
+    assert np.shape(ados8.x_lobster_atom_projected_dos_values_lm) == (4, 1, 201)
+    assert ados1.x_lobster_atom_projected_dos_values_lm[0, 0, 190] == pytest.approx(
+        0.0, abs=1e-30)
+    assert ados8.x_lobster_atom_projected_dos_values_lm[3, 0, 141] == approx(
+        0.32251 / eV)
+    assert ados8.x_lobster_atom_projected_dos_values_lm[0, 0, 152] == approx(
+        0.00337 / eV)

@@ -48,6 +48,10 @@ class section_single_configuration_calculation(public.section_single_configurati
     x_lobster_section_icooplist = SubSection(
         sub_section=SectionProxy('x_lobster_section_icooplist'))
 
+    x_lobster_section_atom_projected_dos = SubSection(
+        sub_section=SectionProxy('x_lobster_section_atom_projected_dos'),
+        repeats=True)
+
 
 class section_method(public.section_method):
 
@@ -151,4 +155,87 @@ class x_lobster_section_icooplist(MSection):
         shape=['number_of_spin_channels', 'x_lobster_number_of_icoop_values'],
         description='''
         Calculated iCOOPs
+        ''')
+
+
+class x_lobster_section_atom_projected_dos(MSection):
+    '''
+    Section collecting the information on an atom projected density of states (DOS)
+    evaluation.
+    FIXME: this should ultimatelly go into some common section but that is not possible
+    right now, see: https://matsci.org/t/section-atom-projected-dos/36008
+    '''
+
+    m_def = Section(validate=False)
+
+    x_lobster_atom_projected_dos_energies = Quantity(
+        type=np.dtype(np.float64),
+        shape=['x_lobster_number_of_atom_projected_dos_values'],
+        unit='joule',
+        description='''
+        Array containing the set of discrete energy values for the atom-projected density
+        (electronic-energy) of states (DOS).
+        ''')
+
+    x_lobster_atom_projected_dos_lm = Quantity(
+        type=np.dtype(np.int32),
+        shape=['x_lobster_number_of_lm_atom_projected_dos', 2],
+        description='''
+        Tuples of $l$ and $m$ values for which x_lobster_atom_projected_dos_values_lm are given.
+        For the quantum number $l$ the conventional meaning of azimuthal quantum number is
+        always adopted. For the integer number $m$, besides the conventional use as
+        magnetic quantum number ($l+1$ integer values from $-l$ to $l$), a set of
+        different conventions is accepted (see the [m_kind wiki
+        page](https://gitlab.rzg.mpg.de/nomad-lab/nomad-meta-info/wikis/metainfo/m-kind).
+        The adopted convention is specified by atom_projected_dos_m_kind.
+        ''')
+
+    x_lobster_atom_projected_dos_m_kind = Quantity(
+        type=str,
+        description='''
+        String describing what the integer numbers of $m$ in atom_projected_dos_lm mean.
+        The allowed values are listed in the [m_kind wiki
+        page](https://gitlab.rzg.mpg.de/nomad-lab/nomad-meta-info/wikis/metainfo/m-kind).
+        ''')
+
+    x_lobster_atom_projected_dos_values_lm = Quantity(
+        type=np.dtype(np.float64),
+        shape=['x_lobster_number_of_lm_atom_projected_dos', 'number_of_spin_channels',
+               'x_lobster_number_of_atom_projected_dos_values'],
+        description='''
+        Values correspond to the number of states for a given energy (the set of discrete
+        energy values is given in atom_projected_dos_energies) divided into contributions
+        from each $l,m$ channel for the atom-projected density (electronic-energy) of
+        states for atom specified in atom_projected_dos_atom_index.
+        ''')
+
+    x_lobster_atom_projected_dos_values_total = Quantity(
+        type=np.dtype(np.float64),
+        shape=['number_of_spin_channels', 'x_lobster_number_of_atom_projected_dos_values'],
+        description='''
+        Values correspond to the number of states for a given energy (the set of discrete
+        energy values is given in atom_projected_dos_energies) divided into contributions
+        summed up over all $l$ channels for the atom-projected density (electronic-energy)
+        of states (DOS) for atom specified in atom_projected_dos_atom_index.
+        ''')
+
+    x_lobster_number_of_atom_projected_dos_values = Quantity(
+        type=int,
+        description='''
+        Gives the number of energy values for the atom-projected density of states (DOS)
+        based on x_lobster_atom_projected_dos_values_lm and
+        x_lobster_atom_projected_dos_values_total.
+        ''')
+
+    x_lobster_number_of_lm_atom_projected_dos = Quantity(
+        type=int,
+        description='''
+        Gives the number of $l$, $m$ combinations for the atom projected density of states
+        (DOS) defined in x_lobster_section_atom_projected_dos.
+        ''')
+
+    x_lobster_atom_projected_dos_atom_index = Quantity(
+        type=int,
+        description='''
+        Index of atom for which is the x_lobster_atom_projected_dos provided.
         ''')
