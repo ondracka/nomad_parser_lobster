@@ -300,19 +300,6 @@ class LobsterParser(FairdiParser):
         run.time_run_cpu1_start = date.total_seconds()
 
         code = mainfile_parser.get('x_lobster_code')
-        if code == 'VASP':
-            try:
-                structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
-            except FileNotFoundError:
-                logger.warning('Unable to parse structure info, no CONTCAR detected')
-        else:
-            logger.warning('Parsing of {} structure is not supported'.format(code))
-        if 'structure' in locals():
-            system = run.m_create(System)
-            system.lattice_vectors = structure.get_cell() * units.angstrom
-            system.atom_labels = structure.get_chemical_symbols()
-            system.configuration_periodic_dimensions = structure.get_pbc()
-            system.atom_positions = structure.get_positions() * units.angstrom
 
         if mainfile_parser.get('finished') is not None:
             run.run_clean_end = True
@@ -320,8 +307,6 @@ class LobsterParser(FairdiParser):
             run.run_clean_end = False
 
         scc = run.m_create(SCC)
-        if 'system' in locals():
-            scc.single_configuration_calculation_to_system_ref = system
         method = run.m_create(Method)
 
         spilling = mainfile_parser.get('spilling')
@@ -350,3 +335,32 @@ class LobsterParser(FairdiParser):
         parse_CHARGE(mainfile_path + '/CHARGE.lobster', scc)
 
         parse_DOSCAR(mainfile_path + '/DOSCAR.lobster', scc, logger)
+
+        # parse structure
+        if code == 'VASP':
+            try:
+                structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
+            except FileNotFoundError:
+                logger.warning('Unable to parse structure info, no CONTCAR detected')
+        else:
+            logger.warning('Parsing of {} structure is not supported'.format(code))
+        if 'structure' in locals():
+            system = run.m_create(System)
+            system.lattice_vectors = structure.get_cell() * units.angstrom
+            system.atom_labels = structure.get_chemical_symbols()
+            system.configuration_periodic_dimensions = structure.get_pbc()
+            system.atom_positions = structure.get_positions() * units.angstrom
+        elif scc.get('x_lobster_section_icohplist') is not None:
+            labels1 = scc.x_lobster_section_icohplist.x_lobster_icohp_atom1_labels
+            labels2 = scc.x_lobster_section_icohplist.x_lobster_icohp_atom2_labels
+            labels = labels1 + labels2
+            system = run.m_create(System)
+            # we don't want to use simple set here as that will change the order
+            seen: set = set()
+            seen_add = seen.add
+            dedup_labels = [x for x in labels if not (x in seen or seen_add(x))]
+            system.atom_labels = [label.rstrip('1234567890') for label in dedup_labels]
+            system.configuration_periodic_dimensions = [True, True, True]
+
+        if 'system' in locals():
+            scc.single_configuration_calculation_to_system_ref = system

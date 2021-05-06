@@ -380,6 +380,15 @@ def test_HfV(parser):
     assert len(scc.x_lobster_abs_charge_spilling) == 1
     assert scc.x_lobster_abs_charge_spilling[0] == approx(2.21)
 
+    # backup partial system parsing
+    system = run.section_system
+    assert len(system) == 1
+    assert len(system[0].atom_labels) == 12
+    assert all([a == b for a, b in zip(system[0].atom_labels,
+               ['Hf', 'Hf', 'Hf', 'Hf', 'V', 'V', 'V', 'V', 'V', 'V', 'V', 'V'])])
+    assert all([a == b for a, b in zip(system[0].configuration_periodic_dimensions,
+               [True, True, True])])
+
     # ICOHPLIST.lobster
     icohplist = scc.x_lobster_section_icohplist
     assert icohplist.x_lobster_number_of_icohp_values == 56
