@@ -59,6 +59,8 @@ def parse_ICOXPLIST(fname, scc, method):
                  )
     ])
 
+    if not path.isfile(fname):
+        return
     icoxplist_parser.mainfile = fname
     icoxplist_parser.parse()
 
@@ -100,6 +102,8 @@ def parse_CHARGE(fname, scc):
             'charges', r'\s*\d+\s+[A-Za-z]{1,2}\s+([-\d\.]+)\s+([-\d\.]+)\s*', repeats=True)
     ])
 
+    if not path.isfile(fname):
+        return
     charge_parser.mainfile = fname
     charge_parser.parse()
 
@@ -146,6 +150,9 @@ def parse_DOSCAR(fname, scc, logger):
             'y(3x^2-y^2)': [3, 6],
         }
         return lm_dictionary.get(lm[1:])
+
+    if not path.isfile(fname):
+        return
 
     with open(fname) as f:
         energies = []
