@@ -47,14 +47,23 @@ def parse_ICOXPLIST(fname, scc, method):
 
     def icoxp_line_split(string):
         tmp = string.split()
-        return [tmp[1], tmp[2], float(tmp[3]), [int(tmp[4]), int(tmp[5]), int(tmp[6])], float(tmp[7])]
+        # LOBSTER version 3 and above
+        if len(tmp) == 8:
+            return [tmp[1], tmp[2], float(tmp[3]), [int(tmp[4]),
+                    int(tmp[5]), int(tmp[6])], float(tmp[7])]
+        # LOBSTER versions below 3
+        elif len(tmp) == 6:
+            return [tmp[1], tmp[2], float(tmp[3]), float(tmp[4]), int(tmp[5])]
 
     icoxplist_parser = UnstructuredTextFileParser(quantities=[
         Quantity('icoxpslist_for_spin', r'\s*CO[OH]P.*spin\s*\d\s*([^#]+[-\d\.]+)',
                  repeats=True,
                  sub_parser=UnstructuredTextFileParser(quantities=[
                      Quantity('line',
-                              r'(\s*\d+\s+\w+\s+\w+\s+[\.\d]+\s+[-\d]+\s+[-\d]+\s+[-\d]+\s+[-\.\d]+\s*)',
+                              # LOBSTER version 3 and above
+                              r'(\s*\d+\s+\w+\s+\w+\s+[\.\d]+\s+[-\d]+\s+[-\d]+\s+[-\d]+\s+[-\.\d]+\s*)|'
+                              # LOBSTER versions below 3
+                              r'(\s*\d+\s+\w+\s+\w+\s+[\.\d]+\s+[-\.\d]+\s+[\d]+\s*)',
                               repeats=True, str_operation=icoxp_line_split)])
                  )
     ])
@@ -70,7 +79,10 @@ def parse_ICOXPLIST(fname, scc, method):
         lines = icoxplist.get('line')
         if lines is None:
             break
-        a1, a2, distances, v, tmp = zip(*lines)
+        if type(lines[0][4]) is int:
+            a1, a2, distances, tmp, bonds = zip(*lines)
+        else:
+            a1, a2, distances, v, tmp = zip(*lines)
         icoxp.append(0)
         icoxp[-1] = list(tmp)
         if spin == 0:
@@ -88,8 +100,13 @@ def parse_ICOXPLIST(fname, scc, method):
             setattr(section, "x_lobster_ico{}p_distances".format(
                 method), np.array(distances) * units.angstrom)
 
-            setattr(section, "x_lobster_ico{}p_translations".format(
-                method), list(v))
+            # version specific entries
+            if 'v' in locals():
+                setattr(section, "x_lobster_ico{}p_translations".format(
+                    method), list(v))
+            if 'bonds' in locals():
+                setattr(section, "x_lobster_ico{}p_number_of_bonds".format(
+                    method), list(bonds))
 
     if len(icoxp) > 0:
         setattr(section, "x_lobster_ico{}p_values".format(

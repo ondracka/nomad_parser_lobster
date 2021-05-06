@@ -49,6 +49,9 @@ def approx(value):
 
 
 def test_Fe(parser):
+    """
+    Tests spin-polarized Fe calculation with LOBSTER 4.0.0
+    """
 
     archive = EntryArchive()
     parser.parse('tests/Fe/lobsterout', archive, logging)
@@ -205,6 +208,9 @@ def test_Fe(parser):
 
 
 def test_NaCl(parser):
+    """
+    Test non-spin-polarized NaCl calculation with LOBSTER 3.2.0
+    """
 
     archive = EntryArchive()
     parser.parse('tests/NaCl/lobsterout', archive, logging)
@@ -350,3 +356,68 @@ def test_NaCl(parser):
         0.32251 / eV)
     assert ados8.x_lobster_atom_projected_dos_values_lm[0, 0, 152] == approx(
         0.00337 / eV)
+
+
+def test_HfV(parser):
+    """
+    Test non-spin-polarized HfV2 calculation with LOBSTER 2.0.0,
+    it has different ICOHPLIST.lobster and ICOOPLIST.lobster scheme.
+    Also test backup structure parsing when no CONTCAR is present.
+    """
+
+    archive = EntryArchive()
+    parser.parse('tests/HfV2/lobsterout', archive, logging)
+
+    run = archive.section_run[0]
+    assert run.program_name == "LOBSTER"
+    assert run.run_clean_end is True
+    assert run.program_version == "2.0.0"
+
+    assert len(run.section_single_configuration_calculation) == 1
+    scc = run.section_single_configuration_calculation[0]
+    assert len(scc.x_lobster_abs_total_spilling) == 1
+    assert scc.x_lobster_abs_total_spilling[0] == approx(4.39)
+    assert len(scc.x_lobster_abs_charge_spilling) == 1
+    assert scc.x_lobster_abs_charge_spilling[0] == approx(2.21)
+
+    # ICOHPLIST.lobster
+    icohplist = scc.x_lobster_section_icohplist
+    assert icohplist.x_lobster_number_of_icohp_values == 56
+    assert len(icohplist.x_lobster_icohp_atom1_labels) == 56
+    assert icohplist.x_lobster_icohp_atom1_labels[41] == "V6"
+    assert len(icohplist.x_lobster_icohp_atom2_labels) == 56
+    assert icohplist.x_lobster_icohp_atom2_labels[16] == "V9"
+    assert len(icohplist.x_lobster_icohp_distances) == 56
+    assert icohplist.x_lobster_icohp_distances[0].magnitude == approx(A_to_m(3.17294))
+    assert icohplist.x_lobster_icohp_distances[47].magnitude == approx(A_to_m(2.60684))
+    assert icohplist.x_lobster_icohp_distances[55].magnitude == approx(A_to_m(2.55809))
+    assert icohplist.x_lobster_icohp_translations is None
+    assert len(icohplist.x_lobster_icohp_number_of_bonds) == 56
+    assert icohplist.x_lobster_icohp_number_of_bonds[0] == 2
+    assert icohplist.x_lobster_icohp_number_of_bonds[53] == 1
+    assert np.shape(icohplist.x_lobster_icohp_values) == (1, 56)
+    assert icohplist.x_lobster_icohp_values[0, 0].magnitude == approx(
+        eV_to_J(-1.72125))
+    assert icohplist.x_lobster_icohp_values[0, 55].magnitude == approx(
+        eV_to_J(-1.62412))
+
+    # ICOHPLIST.lobster
+    icooplist = scc.x_lobster_section_icooplist
+    assert icooplist.x_lobster_number_of_icoop_values == 56
+    assert len(icooplist.x_lobster_icoop_atom1_labels) == 56
+    assert icooplist.x_lobster_icoop_atom1_labels[41] == "V6"
+    assert len(icooplist.x_lobster_icoop_atom2_labels) == 56
+    assert icooplist.x_lobster_icoop_atom2_labels[11] == "Hf4"
+    assert len(icooplist.x_lobster_icoop_distances) == 56
+    assert icooplist.x_lobster_icoop_distances[0].magnitude == approx(A_to_m(3.17294))
+    assert icooplist.x_lobster_icoop_distances[47].magnitude == approx(A_to_m(2.60684))
+    assert icooplist.x_lobster_icoop_distances[55].magnitude == approx(A_to_m(2.55809))
+    assert icooplist.x_lobster_icoop_translations is None
+    assert len(icooplist.x_lobster_icoop_number_of_bonds) == 56
+    assert icooplist.x_lobster_icoop_number_of_bonds[0] == 2
+    assert icooplist.x_lobster_icoop_number_of_bonds[53] == 1
+    assert np.shape(icooplist.x_lobster_icoop_values) == (1, 56)
+    assert icooplist.x_lobster_icoop_values[0, 0].magnitude == approx(
+        eV_to_J(-0.46493))
+    assert icooplist.x_lobster_icoop_values[0, 55].magnitude == approx(
+        eV_to_J(-0.50035))

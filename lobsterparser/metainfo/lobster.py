@@ -100,6 +100,9 @@ class x_lobster_section_icohplist(MSection):
         shape=['x_lobster_number_of_icohp_values', 3],
         description='''
         Vector connecting the unit-cell of the first atom with the one of the second atom
+
+        This is only used with LOBSTER versions 3.0.0 and above, older versions use
+        x_lobster_icohp_number_of_bonds instead.
         ''')
 
     x_lobster_icohp_values = Quantity(
@@ -108,6 +111,18 @@ class x_lobster_section_icohplist(MSection):
         shape=['number_of_spin_channels', 'x_lobster_number_of_icohp_values'],
         description='''
         Calculated iCOHPs
+        ''')
+
+    x_lobster_icohp_number_of_bonds = Quantity(
+        type=int,
+        shape=['x_lobster_number_of_icohp_values'],
+        description='''
+        Number of bonds between first atom and the second atom (including
+        the periodic images).
+
+        This is only used in older LOBSTER versions, new versions print one line
+        for every neighbor, so a line which had x_lobster_icohp_number_of_bonds = 4
+        in the old version would actually show as 4 lines in the new format.
         ''')
 
 
@@ -147,6 +162,9 @@ class x_lobster_section_icooplist(MSection):
         shape=['x_lobster_number_of_icoop_values', 3],
         description='''
         Vector connecting the unit-cell of the first atom with the one of the second atom
+
+        This is only used with LOBSTER versions 3.0.0 and above, older versions use
+        x_lobster_icohp_number_of_bonds instead.
         ''')
 
     x_lobster_icoop_values = Quantity(
@@ -155,6 +173,18 @@ class x_lobster_section_icooplist(MSection):
         shape=['number_of_spin_channels', 'x_lobster_number_of_icoop_values'],
         description='''
         Calculated iCOOPs
+        ''')
+
+    x_lobster_icoop_number_of_bonds = Quantity(
+        type=int,
+        shape=['x_lobster_number_of_icoop_values'],
+        description='''
+        Number of bonds between first atom and the second atom (including
+        the periodic images).
+
+        This is only used in older LOBSTER versions, new versions print one line
+        for every neighbor, so a line which had x_lobster_icoop_number_of_bonds = 4
+        in the old version would actually show as 4 lines in the new format.
         ''')
 
 
