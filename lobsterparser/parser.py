@@ -145,7 +145,19 @@ def parse_CHARGE(fname, scc):
             [list(zip(*charges))[1]]) * e
 
 
-def parse_DOSCAR(fname, scc, logger):
+def parse_DOSCAR(fname, run, logger):
+
+    def parse_species(run, atomic_numbers):
+        """
+        If we don't have any structure from the underlying DFT code, we can
+        at least figure out what atoms we have in the structure. The best place
+        to get this info from is the DOSCAR.lobster
+        """
+
+        if not run.section_system:
+            system = run.m_create(System)
+            system.atom_species = atomic_numbers
+            system.configuration_periodic_dimensions = [True, True, True]
 
     def translate_lm(lm):
         lm_dictionary = {
@@ -171,14 +183,14 @@ def parse_DOSCAR(fname, scc, logger):
     if not path.isfile(fname):
         return
 
+    energies = []
+    dos_values = []
+    integral_dos = []
+    atom_projected_dos_values = []
+    atom_index = 0
+    atomic_numbers = []
+    lms = []
     with open(fname) as f:
-        energies = []
-        dos_values = []
-        integral_dos = []
-        atom_projected_dos_values = []
-        atom_index = 0
-        atomic_numbers = []
-        lms = []
         for i, line in enumerate(f):
             if i == 0:
                 n_atoms = int(line.split()[0])
@@ -205,55 +217,58 @@ def parse_DOSCAR(fname, scc, logger):
                 else:
                     atom_projected_dos_values[-1].append(line[1:])
 
-        if len(dos_values) == n_dos:
-            dos = scc.m_create(section_dos)
-            dos.dos_kind = 'electronic'
-            dos.number_of_dos_values = n_dos
-            dos.dos_energies = energies * units.eV
-            dos.dos_values = np.array(list(zip(*dos_values))) / eV
-            # FIXME: it is not clear if we should do this or if this is done
-            # by normalizer (LOBSTER energies are already normalized)
-            dos.dos_energies_normalized = energies * units.eV
-            dos.dos_values_normalized = dos.dos_values / cell_volume.to_base_units().magnitude / n_atoms
-            # FIXME: the usage of other parsers and definition of dos_integrated_values
-            # is inconsistent, recheck later when it is cleared, follow the definition
-            # for now (add the core electrons)
-            n_electrons = sum(atomic_numbers)
-            index = (np.abs(energies)).argmin()
-            # integrated dos at the Fermi level should be the number of electrons
-            n_valence_electrons = int(round(sum(integral_dos[index])))
-            n_core_electrons = n_electrons - n_valence_electrons
-            dos.dos_integrated_values = np.array(list(zip(*integral_dos))) + n_core_electrons / len(integral_dos[0])
-        else:
-            logger.warning('Unable to parse total dos from DOSCAR.lobster, \
-                            it doesn\'t contain enough dos values')
-            return
+    parse_species(run, atomic_numbers)
 
-        for i, pdos in enumerate(atom_projected_dos_values):
-            if len(pdos) == n_dos:
-                section_pdos = scc.m_create(x_lobster_section_atom_projected_dos)
-                section_pdos.x_lobster_number_of_dos_values = n_dos
-                # FIXME: should the atoms be indexed from 0 or 1?
-                section_pdos.x_lobster_atom_projected_dos_atom_index = i + 1
-                section_pdos.x_lobster_atom_projected_dos_m_kind = 'real_orbital'
-                section_pdos.x_lobster_number_of_lm_atom_projected_dos = len(lms[i])
-                section_pdos.x_lobster_atom_projected_dos_energies = energies * units.eV
-                section_pdos.x_lobster_atom_projected_dos_lm = [translate_lm(lm) for lm in lms[i]]
-                if len(lms[i]) == len(pdos[0]):
-                    # we have the same lm-projections for spin up and dn
-                    section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
-                        [[lmdos] for lmdos in zip(*pdos)]) / eV
-                elif len(lms[i]) * 2 == len(pdos[0]):
-                    pdos_up = list(zip(*pdos))[0::2]
-                    pdos_dn = list(zip(*pdos))[1::2]
-                    section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
-                        [[a, b] for a, b in zip(pdos_up, pdos_dn)]) / eV
-                else:
-                    logger.warning('Unexpected number of columns in DOSCAR.lobster')
-                    return
+    if len(dos_values) == n_dos:
+        dos = run.section_single_configuration_calculation[0].m_create(section_dos)
+        dos.dos_kind = 'electronic'
+        dos.number_of_dos_values = n_dos
+        dos.dos_energies = energies * units.eV
+        dos.dos_values = np.array(list(zip(*dos_values))) / eV
+        # FIXME: it is not clear if we should do this or if this is done
+        # by normalizer (LOBSTER energies are already normalized)
+        dos.dos_energies_normalized = energies * units.eV
+        dos.dos_values_normalized = dos.dos_values / cell_volume.to_base_units().magnitude / n_atoms
+        # FIXME: the usage of other parsers and definition of dos_integrated_values
+        # is inconsistent, recheck later when it is cleared, follow the definition
+        # for now (add the core electrons)
+        n_electrons = sum(atomic_numbers)
+        index = (np.abs(energies)).argmin()
+        # integrated dos at the Fermi level should be the number of electrons
+        n_valence_electrons = int(round(sum(integral_dos[index])))
+        n_core_electrons = n_electrons - n_valence_electrons
+        dos.dos_integrated_values = np.array(list(zip(*integral_dos))) + n_core_electrons / len(integral_dos[0])
+    else:
+        logger.warning('Unable to parse total dos from DOSCAR.lobster, \
+                            it doesn\'t contain enough dos values')
+        return
+
+    for i, pdos in enumerate(atom_projected_dos_values):
+        if len(pdos) == n_dos:
+            section_pdos = run.section_single_configuration_calculation[0].m_create(
+                x_lobster_section_atom_projected_dos)
+            section_pdos.x_lobster_number_of_dos_values = n_dos
+            # FIXME: should the atoms be indexed from 0 or 1?
+            section_pdos.x_lobster_atom_projected_dos_atom_index = i + 1
+            section_pdos.x_lobster_atom_projected_dos_m_kind = 'real_orbital'
+            section_pdos.x_lobster_number_of_lm_atom_projected_dos = len(lms[i])
+            section_pdos.x_lobster_atom_projected_dos_energies = energies * units.eV
+            section_pdos.x_lobster_atom_projected_dos_lm = [translate_lm(lm) for lm in lms[i]]
+            if len(lms[i]) == len(pdos[0]):
+                # we have the same lm-projections for spin up and dn
+                section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
+                    [[lmdos] for lmdos in zip(*pdos)]) / eV
+            elif len(lms[i]) * 2 == len(pdos[0]):
+                pdos_up = list(zip(*pdos))[0::2]
+                pdos_dn = list(zip(*pdos))[1::2]
+                section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
+                    [[a, b] for a, b in zip(pdos_up, pdos_dn)]) / eV
             else:
-                logger.warning('Unable to parse atom lm-projected dos from DOSCAR.lobster, \
-                                it doesn\'t contain enough dos values')
+                logger.warning('Unexpected number of columns in DOSCAR.lobster')
+                return
+        else:
+            logger.warning('Unable to parse atom lm-projected dos from DOSCAR.lobster, \
+                            it doesn\'t contain enough dos values')
 
 
 mainfile_parser = UnstructuredTextFileParser(quantities=[
@@ -298,8 +313,22 @@ class LobsterParser(FairdiParser):
         date = datetime.datetime.strptime(' '.join(mainfile_parser.get('datetime')),
                                           '%Y-%m-%d at %H:%M:%S') - datetime.datetime(1970, 1, 1)
         run.time_run_cpu1_start = date.total_seconds()
-
         code = mainfile_parser.get('x_lobster_code')
+
+        # parse structure
+        if code == 'VASP':
+            try:
+                structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
+            except FileNotFoundError:
+                logger.warning('Unable to parse structure info, no CONTCAR detected')
+        else:
+            logger.warning('Parsing of {} structure is not supported'.format(code))
+        if 'structure' in locals():
+            system = run.m_create(System)
+            system.lattice_vectors = structure.get_cell() * units.angstrom
+            system.atom_labels = structure.get_chemical_symbols()
+            system.configuration_periodic_dimensions = structure.get_pbc()
+            system.atom_positions = structure.get_positions() * units.angstrom
 
         if mainfile_parser.get('finished') is not None:
             run.run_clean_end = True
@@ -334,33 +363,4 @@ class LobsterParser(FairdiParser):
 
         parse_CHARGE(mainfile_path + '/CHARGE.lobster', scc)
 
-        parse_DOSCAR(mainfile_path + '/DOSCAR.lobster', scc, logger)
-
-        # parse structure
-        if code == 'VASP':
-            try:
-                structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
-            except FileNotFoundError:
-                logger.warning('Unable to parse structure info, no CONTCAR detected')
-        else:
-            logger.warning('Parsing of {} structure is not supported'.format(code))
-        if 'structure' in locals():
-            system = run.m_create(System)
-            system.lattice_vectors = structure.get_cell() * units.angstrom
-            system.atom_labels = structure.get_chemical_symbols()
-            system.configuration_periodic_dimensions = structure.get_pbc()
-            system.atom_positions = structure.get_positions() * units.angstrom
-        elif scc.get('x_lobster_section_icohplist') is not None:
-            labels1 = scc.x_lobster_section_icohplist.x_lobster_icohp_atom1_labels
-            labels2 = scc.x_lobster_section_icohplist.x_lobster_icohp_atom2_labels
-            labels = labels1 + labels2
-            system = run.m_create(System)
-            # we don't want to use simple set here as that will change the order
-            seen: set = set()
-            seen_add = seen.add
-            dedup_labels = [x for x in labels if not (x in seen or seen_add(x))]
-            system.atom_labels = [label.rstrip('1234567890') for label in dedup_labels]
-            system.configuration_periodic_dimensions = [True, True, True]
-
-        if 'system' in locals():
-            scc.single_configuration_calculation_to_system_ref = system
+        parse_DOSCAR(mainfile_path + '/DOSCAR.lobster', run, logger)

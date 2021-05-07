@@ -383,9 +383,9 @@ def test_HfV(parser):
     # backup partial system parsing
     system = run.section_system
     assert len(system) == 1
-    assert len(system[0].atom_labels) == 12
-    assert all([a == b for a, b in zip(system[0].atom_labels,
-               ['Hf', 'Hf', 'Hf', 'Hf', 'V', 'V', 'V', 'V', 'V', 'V', 'V', 'V'])])
+    assert len(system[0].atom_species) == 12
+    assert all([a == b for a, b in zip(system[0].atom_species,
+               [72, 72, 72, 72, 23, 23, 23, 23, 23, 23, 23, 23])])
     assert all([a == b for a, b in zip(system[0].configuration_periodic_dimensions,
                [True, True, True])])
 
