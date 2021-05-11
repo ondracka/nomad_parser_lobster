@@ -32,7 +32,7 @@ from nomad.datamodel.metainfo.public import section_atomic_multipoles, section_d
 
 from nomad.parsing.file_parser import UnstructuredTextFileParser, Quantity
 
-from .metainfo.lobster import x_lobster_section_icohplist, x_lobster_section_icooplist, \
+from .metainfo.lobster import x_lobster_section_cohp, x_lobster_section_coop, \
     x_lobster_section_atom_projected_dos
 
 '''
@@ -87,29 +87,29 @@ def parse_ICOXPLIST(fname, scc, method):
         icoxp[-1] = list(tmp)
         if spin == 0:
             if method == 'o':
-                section = scc.m_create(x_lobster_section_icooplist)
+                section = scc.m_create(x_lobster_section_coop)
             elif method == 'h':
-                section = scc.m_create(x_lobster_section_icohplist)
+                section = scc.m_create(x_lobster_section_cohp)
 
-            setattr(section, "x_lobster_number_of_ico{}p_values".format(
+            setattr(section, "x_lobster_number_of_co{}p_pairs".format(
                 method), len(list(a1)))
-            setattr(section, "x_lobster_ico{}p_atom1_labels".format(
+            setattr(section, "x_lobster_co{}p_atom1_labels".format(
                 method), list(a1))
-            setattr(section, "x_lobster_ico{}p_atom2_labels".format(
+            setattr(section, "x_lobster_co{}p_atom2_labels".format(
                 method), list(a2))
-            setattr(section, "x_lobster_ico{}p_distances".format(
+            setattr(section, "x_lobster_co{}p_distances".format(
                 method), np.array(distances) * units.angstrom)
 
             # version specific entries
             if 'v' in locals():
-                setattr(section, "x_lobster_ico{}p_translations".format(
+                setattr(section, "x_lobster_co{}p_translations".format(
                     method), list(v))
             if 'bonds' in locals():
-                setattr(section, "x_lobster_ico{}p_number_of_bonds".format(
+                setattr(section, "x_lobster_co{}p_number_of_bonds".format(
                     method), list(bonds))
 
     if len(icoxp) > 0:
-        setattr(section, "x_lobster_ico{}p_values".format(
+        setattr(section, "x_lobster_integrated_co{}p_values".format(
             method), np.array(icoxp) * units.eV)
 
 

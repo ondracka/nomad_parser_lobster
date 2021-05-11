@@ -42,11 +42,11 @@ class section_single_configuration_calculation(public.section_single_configurati
         when projecting from the original wave functions into the local basis.
         ''')
 
-    x_lobster_section_icohplist = SubSection(
-        sub_section=SectionProxy('x_lobster_section_icohplist'))
+    x_lobster_section_cohp = SubSection(
+        sub_section=SectionProxy('x_lobster_section_cohp'))
 
-    x_lobster_section_icooplist = SubSection(
-        sub_section=SectionProxy('x_lobster_section_icooplist'))
+    x_lobster_section_coop = SubSection(
+        sub_section=SectionProxy('x_lobster_section_coop'))
 
     x_lobster_section_atom_projected_dos = SubSection(
         sub_section=SectionProxy('x_lobster_section_atom_projected_dos'),
@@ -64,127 +64,179 @@ class section_method(public.section_method):
         ''')
 
 
-class x_lobster_section_icohplist(MSection):
+class x_lobster_section_cohp(MSection):
+    """
+    This is a section containing the crystal orbital hamilton population (COHP)
+    and integrated COHP (iCOHP) values.
+    """
     m_def = Section(validate=False)
 
-    x_lobster_number_of_icohp_values = Quantity(
+    x_lobster_number_of_cohp_pairs = Quantity(
         type=int,
         description='''
-        Number of calculated iCOHPs
+        Number of atom pairs for which are the COHPs and iCOHPs calculated.
         ''')
 
-    x_lobster_icohp_atom1_labels = Quantity(
+    x_lobster_cohp_atom1_labels = Quantity(
         type=str,
-        shape=['x_lobster_number_of_icohp_values'],
+        shape=['x_lobster_number_of_cohp_pairs'],
         description='''
-        Species and indices of the first atom for which is the specific iCOHP calculated
+        Species and indices of the first atom for which is the specific COHP/iCOHP calculated
         ''')
 
-    x_lobster_icohp_atom2_labels = Quantity(
+    x_lobster_cohp_atom2_labels = Quantity(
         type=str,
-        shape=['x_lobster_number_of_icohp_values'],
+        shape=['x_lobster_number_of_cohp_pairs'],
         description='''
-        Species and indices of the second atom for which is the specific iCOHP calculated
+        Species and indices of the second atom for which is the specific COHP/iCOHP calculated
         ''')
 
-    x_lobster_icohp_distances = Quantity(
+    x_lobster_cohp_distances = Quantity(
         type=np.dtype(np.float32),
         unit='meter',
-        shape=['x_lobster_number_of_icohp_values'],
+        shape=['x_lobster_number_of_cohp_pairs'],
         description='''
-        Distance between the atom pair for which is the specific iCOHP calculated
+        Distance between atoms of the pair for which is the specific COHP/iCOHP calculated.
         ''')
 
-    x_lobster_icohp_translations = Quantity(
+    x_lobster_cohp_translations = Quantity(
         type=np.dtype(np.int8),
-        shape=['x_lobster_number_of_icohp_values', 3],
+        shape=['x_lobster_number_of_cohp_pairs', 3],
         description='''
         Vector connecting the unit-cell of the first atom with the one of the second atom
 
         This is only used with LOBSTER versions 3.0.0 and above, older versions use
-        x_lobster_icohp_number_of_bonds instead.
+        x_lobster_cohp_number_of_bonds instead.
         ''')
 
-    x_lobster_icohp_values = Quantity(
+    x_lobster_integrated_cohp_values = Quantity(
         type=np.dtype(np.float32),
         unit='joule',
-        shape=['number_of_spin_channels', 'x_lobster_number_of_icohp_values'],
+        shape=['number_of_spin_channels', 'x_lobster_number_of_cohp_pairs'],
         description='''
-        Calculated iCOHPs
+        Calculated iCOHP values.
         ''')
 
-    x_lobster_icohp_number_of_bonds = Quantity(
+    x_lobster_number_of_cohp_values = Quantity(
         type=int,
-        shape=['x_lobster_number_of_icohp_values'],
+        description='''
+        Number of energy values for the COHP.
+        ''')
+
+    x_lobster_cohp_energies = Quantity(
+        type=np.dtype(np.float32),
+        unit='joule',
+        shape=['x_lobster_number_of_cohp_values'],
+        description='''
+        Array containing the set of discrete energy values for COHP.
+        ''')
+
+    x_lobster_cohp_values = Quantity(
+        type=np.dtype(np.float32),
+        shape=['x_lobster_number_of_cohp_pairs', 'number_of_spin_channels', 'x_lobster_number_of_cohp_values'],
+        description='''
+        Calculated COHP values.
+        ''')
+
+    x_lobster_cohp_number_of_bonds = Quantity(
+        type=int,
+        shape=['x_lobster_number_of_cohp_pairs'],
         description='''
         Number of bonds between first atom and the second atom (including
         the periodic images).
 
         This is only used in older LOBSTER versions, new versions print one line
-        for every neighbor, so a line which had x_lobster_icohp_number_of_bonds = 4
-        in the old version would actually show as 4 lines in the new format.
+        for every neighbor, so a pair which had x_lobster_icohp_number_of_bonds = 4
+        in the old version would actually show as 4 lines in the ICOHPLIST or 4 columns
+        in the COPHCAR in the new format.
         ''')
 
 
-class x_lobster_section_icooplist(MSection):
+class x_lobster_section_coop(MSection):
+    """
+    This is a section containing the crystal orbital hamilton population (COOP)
+    and integrated coop (iCOOP) values.
+    """
     m_def = Section(validate=False)
 
-    x_lobster_number_of_icoop_values = Quantity(
+    x_lobster_number_of_coop_pairs = Quantity(
         type=int,
         description='''
-        Number of calculated iCOOPs
+        Number of atom pairs for which are the COOPs and iCOOPs calculated.
         ''')
 
-    x_lobster_icoop_atom1_labels = Quantity(
+    x_lobster_coop_atom1_labels = Quantity(
         type=str,
-        shape=['x_lobster_number_of_icoop_values'],
+        shape=['x_lobster_number_of_coop_pairs'],
         description='''
-        Species and indices of the first atom for which is the specific iCOOP calculated
+        Species and indices of the first atom for which is the specific COOP/iCOOP calculated
         ''')
 
-    x_lobster_icoop_atom2_labels = Quantity(
+    x_lobster_coop_atom2_labels = Quantity(
         type=str,
-        shape=['x_lobster_number_of_icoop_values'],
+        shape=['x_lobster_number_of_coop_pairs'],
         description='''
-        Species and indices of the second atom for which is the specific iCOOP calculated
+        Species and indices of the second atom for which is the specific COOP/iCOOP calculated
         ''')
 
-    x_lobster_icoop_distances = Quantity(
+    x_lobster_coop_distances = Quantity(
         type=np.dtype(np.float32),
         unit='meter',
-        shape=['x_lobster_number_of_icoop_values'],
+        shape=['x_lobster_number_of_coop_pairs'],
         description='''
-        Distance between the atom pair for which is the specific iCOOP calculated
+        Distance between atoms of the pair for which is the specific COOP/iCOOP calculated.
         ''')
 
-    x_lobster_icoop_translations = Quantity(
+    x_lobster_coop_translations = Quantity(
         type=np.dtype(np.int8),
-        shape=['x_lobster_number_of_icoop_values', 3],
+        shape=['x_lobster_number_of_coop_pairs', 3],
         description='''
         Vector connecting the unit-cell of the first atom with the one of the second atom
 
         This is only used with LOBSTER versions 3.0.0 and above, older versions use
-        x_lobster_icohp_number_of_bonds instead.
+        x_lobster_coop_number_of_bonds instead.
         ''')
 
-    x_lobster_icoop_values = Quantity(
+    x_lobster_integrated_coop_values = Quantity(
         type=np.dtype(np.float32),
         unit='joule',
-        shape=['number_of_spin_channels', 'x_lobster_number_of_icoop_values'],
+        shape=['number_of_spin_channels', 'x_lobster_number_of_coop_pairs'],
         description='''
-        Calculated iCOOPs
+        Calculated iCOOP values.
         ''')
 
-    x_lobster_icoop_number_of_bonds = Quantity(
+    x_lobster_number_of_coop_values = Quantity(
         type=int,
-        shape=['x_lobster_number_of_icoop_values'],
+        description='''
+        Number of energy values for the COOP.
+        ''')
+
+    x_lobster_coop_energies = Quantity(
+        type=np.dtype(np.float32),
+        unit='joule',
+        shape=['x_lobster_number_of_coop_values'],
+        description='''
+        Array containing the set of discrete energy values for COOP.
+        ''')
+
+    x_lobster_coop_values = Quantity(
+        type=np.dtype(np.float32),
+        shape=['x_lobster_number_of_coop_pairs', 'number_of_spin_channels', 'x_lobster_number_of_coop_values'],
+        description='''
+        Calculated COOP values.
+        ''')
+
+    x_lobster_coop_number_of_bonds = Quantity(
+        type=int,
+        shape=['x_lobster_number_of_coop_pairs'],
         description='''
         Number of bonds between first atom and the second atom (including
         the periodic images).
 
         This is only used in older LOBSTER versions, new versions print one line
-        for every neighbor, so a line which had x_lobster_icoop_number_of_bonds = 4
-        in the old version would actually show as 4 lines in the new format.
+        for every neighbor, so a pair which had x_lobster_icoop_number_of_bonds = 4
+        in the old version would actually show as 4 lines in the ICOOPLIST or 4 columns
+        in the COOPCAR in the new format.
         ''')
 
 
