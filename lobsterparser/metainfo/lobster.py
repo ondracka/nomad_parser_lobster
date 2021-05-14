@@ -18,8 +18,15 @@
 
 import numpy as np
 
-from nomad.metainfo import Section, Quantity, MSection, SubSection, SectionProxy
+from nomad.metainfo import (
+    Section, Quantity, MSection, SubSection, SectionProxy, Package
+)
 from nomad.datamodel.metainfo import public
+
+
+m_package = Package(
+    name='lobster_nomadmetainfo_json',
+    description='None')
 
 
 class section_single_configuration_calculation(public.section_single_configuration_calculation):
