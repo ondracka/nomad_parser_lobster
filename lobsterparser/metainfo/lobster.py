@@ -374,3 +374,6 @@ class x_lobster_section_atom_projected_dos(MSection):
         description='''
         Index of atom for which is the x_lobster_atom_projected_dos provided.
         ''')
+
+
+m_package.__init_metainfo__()
