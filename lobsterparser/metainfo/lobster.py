@@ -99,7 +99,7 @@ class x_lobster_section_cohp(MSection):
         ''')
 
     x_lobster_cohp_distances = Quantity(
-        type=np.dtype(np.float32),
+        type=np.dtype(np.float64),
         unit='meter',
         shape=['x_lobster_number_of_cohp_pairs'],
         description='''
@@ -116,18 +116,18 @@ class x_lobster_section_cohp(MSection):
         x_lobster_cohp_number_of_bonds instead.
         ''')
 
-    x_lobster_integrated_cohp_values = Quantity(
+    x_lobster_integrated_cohp_at_fermi_level = Quantity(
         type=np.dtype(np.float32),
         unit='joule',
         shape=['number_of_spin_channels', 'x_lobster_number_of_cohp_pairs'],
         description='''
-        Calculated iCOHP values.
+        Calculated iCOHP values ingregrated up to the Fermi level.
         ''')
 
     x_lobster_number_of_cohp_values = Quantity(
         type=int,
         description='''
-        Number of energy values for the COHP.
+        Number of energy values for the COHP and iCOHP.
         ''')
 
     x_lobster_cohp_energies = Quantity(
@@ -135,7 +135,7 @@ class x_lobster_section_cohp(MSection):
         unit='joule',
         shape=['x_lobster_number_of_cohp_values'],
         description='''
-        Array containing the set of discrete energy values for COHP.
+        Array containing the set of discrete energy values for COHP and iCOHP.
         ''')
 
     x_lobster_cohp_values = Quantity(
@@ -143,6 +143,29 @@ class x_lobster_section_cohp(MSection):
         shape=['x_lobster_number_of_cohp_pairs', 'number_of_spin_channels', 'x_lobster_number_of_cohp_values'],
         description='''
         Calculated COHP values.
+        ''')
+
+    x_lobster_integrated_cohp_values = Quantity(
+        type=np.dtype(np.float32),
+        unit='joule',
+        shape=['x_lobster_number_of_cohp_pairs', 'number_of_spin_channels', 'x_lobster_number_of_cohp_values'],
+        description='''
+        Calculated iCOHP values.
+        ''')
+
+    x_lobster_average_cohp_values = Quantity(
+        type=np.dtype(np.float32),
+        shape=['number_of_spin_channels', 'x_lobster_number_of_cohp_values'],
+        description='''
+        Calculated COHP values averaged over all pairs.
+        ''')
+
+    x_lobster_average_integrated_cohp_values = Quantity(
+        type=np.dtype(np.float32),
+        unit='joule',
+        shape=['number_of_spin_channels', 'x_lobster_number_of_cohp_values'],
+        description='''
+        Calculated iCOHP values averaged over all pairs.
         ''')
 
     x_lobster_cohp_number_of_bonds = Quantity(
@@ -187,7 +210,7 @@ class x_lobster_section_coop(MSection):
         ''')
 
     x_lobster_coop_distances = Quantity(
-        type=np.dtype(np.float32),
+        type=np.dtype(np.float64),
         unit='meter',
         shape=['x_lobster_number_of_coop_pairs'],
         description='''
@@ -204,18 +227,18 @@ class x_lobster_section_coop(MSection):
         x_lobster_coop_number_of_bonds instead.
         ''')
 
-    x_lobster_integrated_coop_values = Quantity(
+    x_lobster_integrated_coop_at_fermi_level = Quantity(
         type=np.dtype(np.float32),
         unit='joule',
         shape=['number_of_spin_channels', 'x_lobster_number_of_coop_pairs'],
         description='''
-        Calculated iCOOP values.
+        Calculated iCOOP values ingregrated up to the Fermi level.
         ''')
 
     x_lobster_number_of_coop_values = Quantity(
         type=int,
         description='''
-        Number of energy values for the COOP.
+        Number of energy values for the COOP and iCOOP.
         ''')
 
     x_lobster_coop_energies = Quantity(
@@ -223,7 +246,7 @@ class x_lobster_section_coop(MSection):
         unit='joule',
         shape=['x_lobster_number_of_coop_values'],
         description='''
-        Array containing the set of discrete energy values for COOP.
+        Array containing the set of discrete energy values for COOP and iCOOP.
         ''')
 
     x_lobster_coop_values = Quantity(
@@ -231,6 +254,29 @@ class x_lobster_section_coop(MSection):
         shape=['x_lobster_number_of_coop_pairs', 'number_of_spin_channels', 'x_lobster_number_of_coop_values'],
         description='''
         Calculated COOP values.
+        ''')
+
+    x_lobster_integrated_coop_values = Quantity(
+        type=np.dtype(np.float32),
+        unit='joule',
+        shape=['x_lobster_number_of_coop_pairs', 'number_of_spin_channels', 'x_lobster_number_of_coop_values'],
+        description='''
+        Calculated iCOOP values.
+        ''')
+
+    x_lobster_average_coop_values = Quantity(
+        type=np.dtype(np.float32),
+        shape=['number_of_spin_channels', 'x_lobster_number_of_coop_values'],
+        description='''
+        Calculated COOP values averaged over all pairs.
+        ''')
+
+    x_lobster_average_integrated_coop_values = Quantity(
+        type=np.dtype(np.float32),
+        unit='joule',
+        shape=['number_of_spin_channels', 'x_lobster_number_of_coop_values'],
+        description='''
+        Calculated iCOOP values averaged over all pairs.
         ''')
 
     x_lobster_coop_number_of_bonds = Quantity(

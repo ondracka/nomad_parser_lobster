@@ -84,11 +84,11 @@ def test_Fe(parser):
     assert cohp.x_lobster_cohp_atom1_labels[3] == "Fe1"
     assert len(cohp.x_lobster_cohp_distances) == 20
     assert cohp.x_lobster_cohp_distances[0].magnitude == approx(
-        A_to_m(2.83178))
+        A_to_m(2.831775))
     assert cohp.x_lobster_cohp_distances[13].magnitude == approx(
         A_to_m(2.45239))
     assert cohp.x_lobster_cohp_distances[19].magnitude == approx(
-        A_to_m(2.83178))
+        A_to_m(2.831775))
     assert np.shape(cohp.x_lobster_cohp_translations) == (20, 3)
     assert all([a == b for a, b in zip(
         cohp.x_lobster_cohp_translations[0], [0, 0, -1])])
@@ -96,15 +96,36 @@ def test_Fe(parser):
         cohp.x_lobster_cohp_translations[13], [0, 0, 0])])
     assert all([a == b for a, b in zip(
         cohp.x_lobster_cohp_translations[19], [0, 0, 1])])
-    assert np.shape(cohp.x_lobster_integrated_cohp_values) == (2, 20)
-    assert cohp.x_lobster_integrated_cohp_values[0, 0].magnitude == approx(
+    assert np.shape(cohp.x_lobster_integrated_cohp_at_fermi_level) == (2, 20)
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[0, 0].magnitude == approx(
         eV_to_J(-0.08672))
-    assert cohp.x_lobster_integrated_cohp_values[0, 19].magnitude == approx(
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[0, 19].magnitude == approx(
         eV_to_J(-0.08672))
-    assert cohp.x_lobster_integrated_cohp_values[1, 19].magnitude == approx(
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[1, 19].magnitude == approx(
         eV_to_J(-0.16529))
-    assert cohp.x_lobster_integrated_cohp_values[1, 7].magnitude == approx(
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[1, 7].magnitude == approx(
         eV_to_J(-0.48790))
+
+    # COHPCAR.lobster
+    assert len(cohp.x_lobster_cohp_energies) == 201
+    assert cohp.x_lobster_cohp_energies[0].magnitude == approx(eV_to_J(-10.06030))
+    assert cohp.x_lobster_cohp_energies[200].magnitude == approx(eV_to_J(3.00503))
+    assert np.shape(cohp.x_lobster_average_cohp_values) == (2, 201)
+    assert cohp.x_lobster_average_cohp_values[0][196] == approx(0.02406)
+    assert cohp.x_lobster_average_cohp_values[1][200] == approx(0.01816)
+    assert np.shape(cohp.x_lobster_average_integrated_cohp_values) == (2, 201)
+    assert cohp.x_lobster_average_integrated_cohp_values[0][200].magnitude == approx(
+        eV_to_J(-0.06616))
+    assert cohp.x_lobster_average_integrated_cohp_values[1][200].magnitude == approx(
+        eV_to_J(-0.02265))
+    assert np.shape(cohp.x_lobster_cohp_values) == (20, 2, 201)
+    assert cohp.x_lobster_cohp_values[10][1][200] == approx(0.02291)
+    assert cohp.x_lobster_cohp_values[19][0][200] == approx(0.01439)
+    assert np.shape(cohp.x_lobster_integrated_cohp_values) == (20, 2, 201)
+    assert cohp.x_lobster_integrated_cohp_values[10][0][200].magnitude == approx(
+        eV_to_J(-0.12881))
+    assert cohp.x_lobster_integrated_cohp_values[19][1][200].magnitude == approx(
+        eV_to_J(-0.06876))
 
     # ICOOPLIST.lobster
     coop = scc.x_lobster_section_coop
@@ -115,11 +136,11 @@ def test_Fe(parser):
     assert coop.x_lobster_coop_atom1_labels[3] == "Fe1"
     assert len(coop.x_lobster_coop_distances) == 20
     assert coop.x_lobster_coop_distances[0].magnitude == approx(
-        A_to_m(2.83178))
+        A_to_m(2.831775))
     assert coop.x_lobster_coop_distances[13].magnitude == approx(
         A_to_m(2.45239))
     assert coop.x_lobster_coop_distances[19].magnitude == approx(
-        A_to_m(2.83178))
+        A_to_m(2.831775))
     assert np.shape(coop.x_lobster_coop_translations) == (20, 3)
     assert all([a == b for a, b in zip(
         coop.x_lobster_coop_translations[0], [0, 0, -1])])
@@ -127,15 +148,36 @@ def test_Fe(parser):
         coop.x_lobster_coop_translations[13], [0, 0, 0])])
     assert all([a == b for a, b in zip(
         coop.x_lobster_coop_translations[19], [0, 0, 1])])
-    assert np.shape(coop.x_lobster_integrated_coop_values) == (2, 20)
-    assert coop.x_lobster_integrated_coop_values[0, 0].magnitude == approx(
+    assert np.shape(coop.x_lobster_integrated_coop_at_fermi_level) == (2, 20)
+    assert coop.x_lobster_integrated_coop_at_fermi_level[0, 0].magnitude == approx(
         eV_to_J(-0.06882))
-    assert coop.x_lobster_integrated_coop_values[0, 19].magnitude == approx(
+    assert coop.x_lobster_integrated_coop_at_fermi_level[0, 19].magnitude == approx(
         eV_to_J(-0.06882))
-    assert coop.x_lobster_integrated_coop_values[1, 19].magnitude == approx(
+    assert coop.x_lobster_integrated_coop_at_fermi_level[1, 19].magnitude == approx(
         eV_to_J(-0.11268))
-    assert coop.x_lobster_integrated_coop_values[1, 7].magnitude == approx(
+    assert coop.x_lobster_integrated_coop_at_fermi_level[1, 7].magnitude == approx(
         eV_to_J(-0.05179))
+
+    # COOPCAR.lobster
+    assert len(coop.x_lobster_coop_energies) == 201
+    assert coop.x_lobster_coop_energies[0].magnitude == approx(eV_to_J(-10.06030))
+    assert coop.x_lobster_coop_energies[200].magnitude == approx(eV_to_J(3.00503))
+    assert np.shape(coop.x_lobster_average_coop_values) == (2, 201)
+    assert coop.x_lobster_average_coop_values[0][196] == approx(-0.04773)
+    assert coop.x_lobster_average_coop_values[1][200] == approx(-0.04542)
+    assert np.shape(coop.x_lobster_average_integrated_coop_values) == (2, 201)
+    assert coop.x_lobster_average_integrated_coop_values[0][200].magnitude == approx(
+        eV_to_J(-0.12265))
+    assert coop.x_lobster_average_integrated_coop_values[1][200].magnitude == approx(
+        eV_to_J(-0.14690))
+    assert np.shape(coop.x_lobster_coop_values) == (20, 2, 201)
+    assert coop.x_lobster_coop_values[3][1][200] == approx(-0.01346)
+    assert coop.x_lobster_coop_values[0][0][200] == approx(-0.04542)
+    assert np.shape(coop.x_lobster_integrated_coop_values) == (20, 2, 201)
+    assert coop.x_lobster_integrated_coop_values[10][0][199].magnitude == approx(
+        eV_to_J(-0.07360))
+    assert coop.x_lobster_integrated_coop_values[19][1][200].magnitude == approx(
+        eV_to_J(-0.13041))
 
     # CHARGE.lobster
     atomic_multipoles = scc.section_atomic_multipoles
@@ -254,11 +296,32 @@ def test_NaCl(parser):
         cohp.x_lobster_cohp_translations[54], [0, -1, 0])])
     assert all([a == b for a, b in zip(
         cohp.x_lobster_cohp_translations[71], [0, 1, 0])])
-    assert np.shape(cohp.x_lobster_integrated_cohp_values) == (1, 72)
-    assert cohp.x_lobster_integrated_cohp_values[0, 0].magnitude == approx(
+    assert np.shape(cohp.x_lobster_integrated_cohp_at_fermi_level) == (1, 72)
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[0, 0].magnitude == approx(
         eV_to_J(-0.02652))
-    assert cohp.x_lobster_integrated_cohp_values[0, 71].magnitude == approx(
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[0, 71].magnitude == approx(
         eV_to_J(-0.02925))
+
+    # COHPCAR.lobster
+    assert len(cohp.x_lobster_cohp_energies) == 201
+    assert cohp.x_lobster_cohp_energies[0].magnitude == approx(eV_to_J(-12.02261))
+    assert cohp.x_lobster_cohp_energies[200].magnitude == approx(eV_to_J(2.55025))
+    assert np.shape(cohp.x_lobster_average_cohp_values) == (1, 201)
+    assert cohp.x_lobster_average_cohp_values[0][0] == pytest.approx(0.0)
+    assert cohp.x_lobster_average_cohp_values[0][151] == approx(-0.03162)
+    assert np.shape(cohp.x_lobster_average_integrated_cohp_values) == (1, 201)
+    assert cohp.x_lobster_average_integrated_cohp_values[0][0].magnitude == approx(
+        eV_to_J(-0.15834))
+    assert cohp.x_lobster_average_integrated_cohp_values[0][200].magnitude == approx(
+        eV_to_J(-0.24310))
+    assert np.shape(cohp.x_lobster_cohp_values) == (72, 1, 201)
+    assert cohp.x_lobster_cohp_values[1][0][200] == pytest.approx(0.0)
+    assert cohp.x_lobster_cohp_values[71][0][140] == approx(-0.00403)
+    assert np.shape(cohp.x_lobster_integrated_cohp_values) == (72, 1, 201)
+    assert cohp.x_lobster_integrated_cohp_values[2][0][200].magnitude == approx(
+        eV_to_J(-0.02652))
+    assert cohp.x_lobster_integrated_cohp_values[67][0][199].magnitude == approx(
+        eV_to_J(-0.04137))
 
     # ICOOPLIST.lobster
     coop = scc.x_lobster_section_coop
@@ -278,10 +341,31 @@ def test_NaCl(parser):
         coop.x_lobster_coop_translations[13], [0, 1, 0])])
     assert all([a == b for a, b in zip(
         coop.x_lobster_coop_translations[71], [0, 1, 0])])
-    assert np.shape(coop.x_lobster_integrated_coop_values) == (1, 72)
-    assert coop.x_lobster_integrated_coop_values[0, 0].magnitude == approx(
+    assert np.shape(coop.x_lobster_integrated_coop_at_fermi_level) == (1, 72)
+    assert coop.x_lobster_integrated_coop_at_fermi_level[0, 0].magnitude == approx(
         eV_to_J(-0.00519))
-    assert coop.x_lobster_integrated_coop_values[0, 71].magnitude == approx(
+    assert coop.x_lobster_integrated_coop_at_fermi_level[0, 71].magnitude == approx(
+        eV_to_J(-0.00580))
+
+    # COOPCAR.lobster
+    assert len(coop.x_lobster_coop_energies) == 201
+    assert coop.x_lobster_coop_energies[0].magnitude == approx(eV_to_J(-12.02261))
+    assert coop.x_lobster_coop_energies[200].magnitude == approx(eV_to_J(2.55025))
+    assert np.shape(coop.x_lobster_average_coop_values) == (1, 201)
+    assert coop.x_lobster_average_coop_values[0][0] == pytest.approx(0.0)
+    assert coop.x_lobster_average_coop_values[0][145] == approx(0.03178)
+    assert np.shape(coop.x_lobster_average_integrated_coop_values) == (1, 201)
+    assert coop.x_lobster_average_integrated_coop_values[0][0].magnitude == approx(
+        eV_to_J(0.00368))
+    assert coop.x_lobster_average_integrated_coop_values[0][200].magnitude == approx(
+        eV_to_J(0.00682))
+    assert np.shape(coop.x_lobster_coop_values) == (72, 1, 201)
+    assert coop.x_lobster_coop_values[1][0][200] == pytest.approx(0.0)
+    assert coop.x_lobster_coop_values[71][0][143] == approx(0.01862)
+    assert np.shape(coop.x_lobster_integrated_coop_values) == (72, 1, 201)
+    assert coop.x_lobster_integrated_coop_values[2][0][200].magnitude == approx(
+        eV_to_J(-0.00519))
+    assert coop.x_lobster_integrated_coop_values[71][0][199].magnitude == approx(
         eV_to_J(-0.00580))
 
     # CHARGE.lobster
@@ -408,10 +492,10 @@ def test_HfV(parser):
     assert len(cohp.x_lobster_cohp_number_of_bonds) == 56
     assert cohp.x_lobster_cohp_number_of_bonds[0] == 2
     assert cohp.x_lobster_cohp_number_of_bonds[53] == 1
-    assert np.shape(cohp.x_lobster_integrated_cohp_values) == (1, 56)
-    assert cohp.x_lobster_integrated_cohp_values[0, 0].magnitude == approx(
+    assert np.shape(cohp.x_lobster_integrated_cohp_at_fermi_level) == (1, 56)
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[0, 0].magnitude == approx(
         eV_to_J(-1.72125))
-    assert cohp.x_lobster_integrated_cohp_values[0, 55].magnitude == approx(
+    assert cohp.x_lobster_integrated_cohp_at_fermi_level[0, 55].magnitude == approx(
         eV_to_J(-1.62412))
 
     # ICOOPLIST.lobster
@@ -429,8 +513,8 @@ def test_HfV(parser):
     assert len(coop.x_lobster_coop_number_of_bonds) == 56
     assert coop.x_lobster_coop_number_of_bonds[0] == 2
     assert coop.x_lobster_coop_number_of_bonds[53] == 1
-    assert np.shape(coop.x_lobster_integrated_coop_values) == (1, 56)
-    assert coop.x_lobster_integrated_coop_values[0, 0].magnitude == approx(
+    assert np.shape(coop.x_lobster_integrated_coop_at_fermi_level) == (1, 56)
+    assert coop.x_lobster_integrated_coop_at_fermi_level[0, 0].magnitude == approx(
         eV_to_J(-0.46493))
-    assert coop.x_lobster_integrated_coop_values[0, 55].magnitude == approx(
+    assert coop.x_lobster_integrated_coop_at_fermi_level[0, 55].magnitude == approx(
         eV_to_J(-0.50035))
