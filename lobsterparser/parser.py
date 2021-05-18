@@ -388,7 +388,7 @@ class LobsterParser(FairdiParser):
         # That leads to test failures, so ignore it for now.
         date = datetime.datetime.strptime(' '.join(mainfile_parser.get('datetime')),
                                           '%Y-%m-%d at %H:%M:%S') - datetime.datetime(1970, 1, 1)
-        run.time_run_cpu1_start = date.total_seconds()
+        run.time_run_wall_start = date.total_seconds()
         code = mainfile_parser.get('x_lobster_code')
 
         # parse structure

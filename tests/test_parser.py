@@ -60,7 +60,7 @@ def test_Fe(parser):
     assert run.program_name == "LOBSTER"
     assert run.run_clean_end is True
     assert run.program_version == "4.0.0"
-    assert run.time_run_cpu1_start.magnitude == 1619687985
+    assert run.time_run_wall_start.magnitude == 1619687985
 
     assert len(run.section_single_configuration_calculation) == 1
     scc = run.section_single_configuration_calculation[0]
@@ -265,7 +265,7 @@ def test_NaCl(parser):
     assert run.program_name == "LOBSTER"
     assert run.run_clean_end is True
     assert run.program_version == "3.2.0"
-    assert run.time_run_cpu1_start.magnitude == 1619713048
+    assert run.time_run_wall_start.magnitude == 1619713048
 
     assert len(run.section_single_configuration_calculation) == 1
     scc = run.section_single_configuration_calculation[0]
