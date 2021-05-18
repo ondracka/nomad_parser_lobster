@@ -420,6 +420,7 @@ class LobsterParser(FairdiParser):
 
         scc = run.m_create(SCC)
         method = run.m_create(Method)
+        scc.single_configuration_to_calculation_method_ref = method
 
         spilling = mainfile_parser.get('spilling')
         if spilling is not None:
@@ -454,3 +455,6 @@ class LobsterParser(FairdiParser):
         parse_CHARGE(mainfile_path + '/CHARGE.lobster', scc)
 
         parse_DOSCAR(mainfile_path + '/DOSCAR.lobster', run, logger)
+
+        if run.section_system:
+            scc.single_configuration_calculation_to_system_ref = run.section_system[0]
