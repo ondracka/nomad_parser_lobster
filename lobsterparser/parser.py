@@ -109,8 +109,84 @@ def parse_ICOXPLIST(fname, scc, method):
                     method), list(bonds))
 
     if len(icoxp) > 0:
-        setattr(section, "x_lobster_integrated_co{}p_values".format(
+        setattr(section, "x_lobster_integrated_co{}p_at_fermi_level".format(
             method), np.array(icoxp) * units.eV)
+
+
+def parse_COXPCAR(fname, scc, method, logger):
+    coxpcar_parser = UnstructuredTextFileParser(quantities=[
+        Quantity('coxp_pairs', r'No\.\d+:(\w{1,2}\d+)->(\w{1,2}\d+)\(([\d\.]+)\)\s*?',
+                 repeats=True),
+        Quantity('coxp_lines', r'\n\s*(-*\d+\.\d+(?:[ \t]+-*\d+\.\d+)+)',
+                 repeats=True)
+    ])
+
+    if not path.isfile(fname):
+        return
+    coxpcar_parser.mainfile = fname
+    coxpcar_parser.parse()
+
+    if method == 'o':
+        if not scc.x_lobster_section_coop:
+            section = scc.m_create(x_lobster_section_coop)
+        else:
+            section = scc.x_lobster_section_coop
+    elif method == 'h':
+        if not scc.x_lobster_section_cohp:
+            section = scc.m_create(x_lobster_section_cohp)
+        else:
+            section = scc.x_lobster_section_cohp
+
+    pairs = coxpcar_parser.get('coxp_pairs')
+    a1, a2, distances = zip(*pairs)
+    number_of_pairs = len(list(a1))
+
+    setattr(section, "x_lobster_number_of_co{}p_pairs".format(
+        method), number_of_pairs)
+    setattr(section, "x_lobster_co{}p_atom1_labels".format(
+        method), list(a1))
+    setattr(section, "x_lobster_co{}p_atom2_labels".format(
+        method), list(a2))
+    setattr(section, "x_lobster_co{}p_distances".format(
+        method), np.array(distances) * units.angstrom)
+
+    coxp_lines = coxpcar_parser.get('coxp_lines')
+    coxp_lines = list(zip(*coxp_lines))
+
+    setattr(section, "x_lobster_number_of_co{}p_values".format(
+        method), len(coxp_lines[0]))
+    setattr(section, "x_lobster_co{}p_energies".format(
+        method), np.array(coxp_lines[0]) * units.eV)
+
+    if len(coxp_lines) == 2 * number_of_pairs + 3:
+        coxp = [[x] for x in coxp_lines[3::2]]
+        icoxp = [[x] for x in coxp_lines[4::2]]
+        acoxp = [coxp_lines[1]]
+        aicoxp = [coxp_lines[2]]
+    elif len(coxp_lines) == 4 * number_of_pairs + 5:
+        coxp = [x for x in zip(coxp_lines[5:number_of_pairs * 2 + 4:2],
+                coxp_lines[number_of_pairs * 2 + 5: 4 * number_of_pairs + 4:2])]
+        icoxp = [x for x in zip(coxp_lines[6:number_of_pairs * 2 + 5:2],
+                 coxp_lines[number_of_pairs * 2 + 6: 4 * number_of_pairs + 5:2])]
+        acoxp = [coxp_lines[1], coxp_lines[3]]
+        aicoxp = [coxp_lines[2], coxp_lines[4]]
+    else:
+        logger.warning('Unexpected number of columns {} '
+                       'in CO{}PCAR.lobster.'.format(len(coxp_lines),
+                                                     method.upper()))
+        return
+
+    # FIXME: correct magnitude?
+    setattr(section, "x_lobster_co{}p_values".format(
+        method), np.array(coxp))
+    setattr(section, "x_lobster_average_co{}p_values".format(
+        method), np.array(acoxp))
+    setattr(section, "x_lobster_integrated_co{}p_values".format(
+        method), np.array(icoxp) * units.eV)
+    setattr(section, "x_lobster_average_integrated_co{}p_values".format(
+        method), np.array(aicoxp) * units.eV)
+    setattr(section, "x_lobster_integrated_co{}p_values".format(
+        method), np.array(icoxp) * units.eV)
 
 
 def parse_CHARGE(fname, scc):
@@ -360,6 +436,9 @@ class LobsterParser(FairdiParser):
 
         parse_ICOXPLIST(mainfile_path + '/ICOHPLIST.lobster', scc, 'h')
         parse_ICOXPLIST(mainfile_path + '/ICOOPLIST.lobster', scc, 'o')
+
+        parse_COXPCAR(mainfile_path + '/COHPCAR.lobster', scc, 'h', logger)
+        parse_COXPCAR(mainfile_path + '/COOPCAR.lobster', scc, 'o', logger)
 
         parse_CHARGE(mainfile_path + '/CHARGE.lobster', scc)
 
