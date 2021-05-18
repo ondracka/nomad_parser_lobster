@@ -353,6 +353,13 @@ mainfile_parser = UnstructuredTextFileParser(quantities=[
              repeats=False),
     Quantity('x_lobster_code',
              r'detecting used PAW program... (.*)', repeats=False),
+    Quantity('x_lobster_basis',
+             r'setting up local basis functions...\s*((?:[a-zA-Z]{1,2}\s+\(.+\)(?:\s+\d\S+)+\s+)+)',
+             repeats=False,
+             sub_parser=UnstructuredTextFileParser(quantities=[
+                 Quantity('x_lobster_basis_species',
+                          r'([a-zA-Z]+){1,2}\s+\((.+)\)((?:\s+\d\S+)+)\s+', repeats=True)
+             ])),
     Quantity('spilling', r'((?:spillings|abs. tot)[\s\S]*?charge\s*spilling:\s*\d+\.\d+%)',
              repeats=True,
              sub_parser=UnstructuredTextFileParser(quantities=[
@@ -433,6 +440,10 @@ class LobsterParser(FairdiParser):
             val = mainfile_parser.get(key)
             if val is not None:
                 setattr(method, key, val)
+
+        val = mainfile_parser.get('x_lobster_basis').get('x_lobster_basis_species')
+        if val is not None:
+            method.basis_set = val[0][1]
 
         parse_ICOXPLIST(mainfile_path + '/ICOHPLIST.lobster', scc, 'h')
         parse_ICOXPLIST(mainfile_path + '/ICOOPLIST.lobster', scc, 'o')

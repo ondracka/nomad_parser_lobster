@@ -74,6 +74,7 @@ def test_Fe(parser):
     method = run.section_method
     assert len(method) == 1
     assert method[0].x_lobster_code == "VASP"
+    assert method[0].basis_set == "pbeVaspFit2015"
 
     # ICOHPLIST.lobster
     cohp = scc.x_lobster_section_cohp
@@ -277,6 +278,7 @@ def test_NaCl(parser):
     method = run.section_method
     assert len(method) == 1
     assert method[0].x_lobster_code == "VASP"
+    assert method[0].basis_set == "pbeVaspFit2015"
 
     # ICOHPLIST.lobster
     cohp = scc.x_lobster_section_cohp
@@ -476,6 +478,10 @@ def test_HfV(parser):
                [72, 72, 72, 72, 23, 23, 23, 23, 23, 23, 23, 23])])
     assert all([a == b for a, b in zip(system[0].configuration_periodic_dimensions,
                [True, True, True])])
+
+    # method
+    method = run.section_method
+    assert method[0].basis_set == "Koga"
 
     # ICOHPLIST.lobster
     cohp = scc.x_lobster_section_cohp
