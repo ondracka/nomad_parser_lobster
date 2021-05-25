@@ -14,7 +14,7 @@ in the same directory as files that also belong to that entry. Parsers
 might also read information from these auxillary files. This way you can add more files
 to an entry, even if the respective parser/code might not directly support it.
 
-For EXAMPLE please provide at least the files from this table if applicable to your
+For LOBSTER please provide at least the files from this table if applicable to your
 calculations (remember that you can provide more files if you want):
 
 |Input Filename| Description|
@@ -83,10 +83,8 @@ pip install nomad-lab
 Clone the parser project and install it in development mode:
 
 ```
-git clone https://github.com/nomad-coe/nomad-parser-lobster.git nomad-parser-vasp
-pip install -e nomad-parser-vasp
+git clone https://github.com/ondracka/nomad_parser_lobster.git nomad-parser-lobster
+pip install -e nomad-parser-lobster
 ```
 
 Running the parser now, will use the parser's Python code from the clone project.
-
-$parserSpecific$
