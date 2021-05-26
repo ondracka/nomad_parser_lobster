@@ -273,6 +273,8 @@ def parse_DOSCAR(fname, run, logger):
     integral_dos = []
     atom_projected_dos_values = []
     atom_index = 0
+    n_atoms = 0
+    n_dos = 0
     atomic_numbers = []
     lms = []
     with open(fname) as f:
@@ -302,7 +304,11 @@ def parse_DOSCAR(fname, run, logger):
                 else:
                     atom_projected_dos_values[-1].append(line[1:])
 
-    parse_species(run, atomic_numbers)
+    if len(atomic_numbers) > 0 and len(atomic_numbers) == n_atoms:
+        parse_species(run, atomic_numbers)
+
+    if n_dos == 0:
+        return
 
     if len(dos_values) == n_dos:
         dos = run.section_single_configuration_calculation[0].m_create(section_dos)
