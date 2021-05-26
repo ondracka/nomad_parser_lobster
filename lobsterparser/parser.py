@@ -138,6 +138,10 @@ def parse_COXPCAR(fname, scc, method, logger):
             section = scc.x_lobster_section_cohp
 
     pairs = coxpcar_parser.get('coxp_pairs')
+    if pairs is None:
+        logger.warning('No CO{}P values detected in CO{}PCAR.lobster.'.format(
+            method.upper(), method.upper()))
+        return
     a1, a2, distances = zip(*pairs)
     number_of_pairs = len(list(a1))
 
@@ -151,6 +155,11 @@ def parse_COXPCAR(fname, scc, method, logger):
         method), np.array(distances) * units.angstrom)
 
     coxp_lines = coxpcar_parser.get('coxp_lines')
+    if coxp_lines is None:
+        logger.warning('No CO{}P values detected in CO{}PCAR.lobster.'
+                       'The file is likely incomplete'.format(
+                           method.upper(), method.upper()))
+        return
     coxp_lines = list(zip(*coxp_lines))
 
     setattr(section, "x_lobster_number_of_co{}p_values".format(
