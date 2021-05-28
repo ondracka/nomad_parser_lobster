@@ -524,3 +524,16 @@ def test_HfV(parser):
         eV_to_J(-0.46493))
     assert coop.x_lobster_integrated_coop_at_fermi_level[0, 55].magnitude == approx(
         eV_to_J(-0.50035))
+
+
+def test_failed_case(parser):
+    """
+    Check that we also handle gracefully a case where the lobster ends very early.
+    Here it is because of a wrong CONTCAR.
+    """
+
+    archive = EntryArchive()
+    parser.parse('tests/failed_case/lobsterout', archive, logging)
+
+    run = archive.section_run[0]
+    assert run.run_clean_end is False
