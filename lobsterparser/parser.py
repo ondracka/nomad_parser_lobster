@@ -457,9 +457,11 @@ class LobsterParser(FairdiParser):
             if val is not None:
                 setattr(method, key, val)
 
-        val = mainfile_parser.get('x_lobster_basis').get('x_lobster_basis_species')
-        if val is not None:
-            method.basis_set = val[0][1]
+        basis = mainfile_parser.get('x_lobster_basis')
+        if basis is not None:
+            species = basis.get('x_lobster_basis_species')
+            if species is not None:
+                method.basis_set = species[0][1]
 
         parse_ICOXPLIST(mainfile_path + '/ICOHPLIST.lobster', scc, 'h')
         parse_ICOXPLIST(mainfile_path + '/ICOOPLIST.lobster', scc, 'o')
