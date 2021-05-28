@@ -414,13 +414,14 @@ class LobsterParser(FairdiParser):
         code = mainfile_parser.get('x_lobster_code')
 
         # parse structure
-        if code == 'VASP':
-            try:
-                structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
-            except FileNotFoundError:
-                logger.warning('Unable to parse structure info, no CONTCAR detected')
-        else:
-            logger.warning('Parsing of {} structure is not supported'.format(code))
+        if code is not None:
+            if code == 'VASP':
+                try:
+                    structure = ase.io.read(mainfile_path + '/CONTCAR', format="vasp")
+                except FileNotFoundError:
+                    logger.warning('Unable to parse structure info, no CONTCAR detected')
+            else:
+                logger.warning('Parsing of {} structure is not supported'.format(code))
         if 'structure' in locals():
             system = run.m_create(System)
             system.lattice_vectors = structure.get_cell() * units.angstrom
