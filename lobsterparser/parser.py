@@ -24,16 +24,17 @@ from os import path
 from nomad.datamodel import EntryArchive
 from nomad.parsing import FairdiParser
 from nomad.units import ureg as units
-from nomad.datamodel.metainfo.public import section_run as Run
-from nomad.datamodel.metainfo.public import section_system as System
-from nomad.datamodel.metainfo.public import section_method as Method
-from nomad.datamodel.metainfo.public import section_single_configuration_calculation as SCC
-from nomad.datamodel.metainfo.public import section_atomic_multipoles, section_dos
+from nomad.datamodel.metainfo.simulation.run import Run, Program, TimeRun
+from nomad.datamodel.metainfo.simulation.system import (
+    System, Atoms)
+from nomad.datamodel.metainfo.simulation.method import (
+    Method, Electronic, BasisSet)
+from nomad.datamodel.metainfo.simulation.calculation import (
+    Calculation, Dos, DosValues, Charges)
 
-from nomad.parsing.file_parser import UnstructuredTextFileParser, Quantity
+from nomad.parsing.file_parser import TextParser, Quantity
 
-from .metainfo.lobster import x_lobster_section_cohp, x_lobster_section_coop, \
-    x_lobster_section_atom_projected_dos
+from .metainfo.lobster import x_lobster_section_cohp, x_lobster_section_coop
 
 '''
 This is a LOBSTER code parser.
@@ -55,10 +56,10 @@ def parse_ICOXPLIST(fname, scc, method):
         elif len(tmp) == 6:
             return [tmp[1], tmp[2], float(tmp[3]), float(tmp[4]), int(tmp[5])]
 
-    icoxplist_parser = UnstructuredTextFileParser(quantities=[
+    icoxplist_parser = TextParser(quantities=[
         Quantity('icoxpslist_for_spin', r'\s*CO[OH]P.*spin\s*\d\s*([^#]+[-\d\.]+)',
                  repeats=True,
-                 sub_parser=UnstructuredTextFileParser(quantities=[
+                 sub_parser=TextParser(quantities=[
                      Quantity('line',
                               # LOBSTER version 3 and above
                               r'(\s*\d+\s+\w+\s+\w+\s+[\.\d]+\s+[-\d]+\s+[-\d]+\s+[-\d]+\s+[-\.\d]+\s*)|'
@@ -114,7 +115,7 @@ def parse_ICOXPLIST(fname, scc, method):
 
 
 def parse_COXPCAR(fname, scc, method, logger):
-    coxpcar_parser = UnstructuredTextFileParser(quantities=[
+    coxpcar_parser = TextParser(quantities=[
         Quantity('coxp_pairs', r'No\.\d+:(\w{1,2}\d+)->(\w{1,2}\d+)\(([\d\.]+)\)\s*?',
                  repeats=True),
         Quantity('coxp_lines', r'\n\s*(-*\d+\.\d+(?:[ \t]+-*\d+\.\d+)+)',
@@ -199,7 +200,7 @@ def parse_COXPCAR(fname, scc, method, logger):
 
 
 def parse_CHARGE(fname, scc):
-    charge_parser = UnstructuredTextFileParser(quantities=[
+    charge_parser = TextParser(quantities=[
         Quantity(
             'charges', r'\s*\d+\s+[A-Za-z]{1,2}\s+([-\d\.]+)\s+([-\d\.]+)\s*', repeats=True)
     ])
@@ -211,23 +212,14 @@ def parse_CHARGE(fname, scc):
 
     charges = charge_parser.get('charges')
     if charges is not None:
-        scc.m_create(section_atomic_multipoles)
-        scc.m_create(section_atomic_multipoles)
-        scc.section_atomic_multipoles[0].atomic_multipole_kind = "mulliken"
-        scc.section_atomic_multipoles[0].atomic_multipole_m_kind = "integrated"
-        scc.section_atomic_multipoles[0].atomic_multipole_lm = np.array([[0, 0]])
-        scc.section_atomic_multipoles[0].number_of_lm_atomic_multipoles = 1
-        # FIXME: the mulliken charge has an obvious unit,
-        # but section_atomic_multipoles.atomic_multipole_values is unitless currently
-        scc.section_atomic_multipoles[0].atomic_multipole_values = np.array(
-            [list(zip(*charges))[0]]) * e
-        # FIXME: Loewdin charge might not be allowed here according to the wiki?
-        scc.section_atomic_multipoles[1].atomic_multipole_kind = "loewdin"
-        scc.section_atomic_multipoles[1].atomic_multipole_m_kind = "integrated"
-        scc.section_atomic_multipoles[1].atomic_multipole_lm = np.array([[0, 0]])
-        scc.section_atomic_multipoles[1].number_of_lm_atomic_multipoles = 1
-        scc.section_atomic_multipoles[1].atomic_multipole_values = np.array(
-            [list(zip(*charges))[1]]) * e
+        sec_charges = scc.m_create(Charges)
+        sec_charges.analysis_method = "mulliken"
+        sec_charges.kind = "integrated"
+        sec_charges.value = np.array(list(zip(*charges))[0]) * units.elementary_charge
+        sec_charges = scc.m_create(Charges)
+        sec_charges.analysis_method = "loewdin"
+        sec_charges.kind = "integrated"
+        sec_charges.value = np.array(list(zip(*charges))[1]) * units.elementary_charge
 
 
 def parse_DOSCAR(fname, run, logger):
@@ -239,10 +231,9 @@ def parse_DOSCAR(fname, run, logger):
         to get this info from is the DOSCAR.lobster
         """
 
-        if not run.section_system:
+        if not run.system:
             system = run.m_create(System)
-            system.atom_species = atomic_numbers
-            system.configuration_periodic_dimensions = [True, True, True]
+            system.atoms = Atoms(species=atomic_numbers, periodic=[True, True, True])
 
     def translate_lm(lm):
         lm_dictionary = {
@@ -282,7 +273,7 @@ def parse_DOSCAR(fname, run, logger):
             if i == 0:
                 n_atoms = int(line.split()[0])
             if i == 1:
-                cell_volume = float(line.split()[0]) * units.angstrom**3
+                _ = float(line.split()[0]) * units.angstrom**3
             if i == 5:
                 n_dos = int(line.split()[2])
             if 'Z=' in line:
@@ -311,58 +302,53 @@ def parse_DOSCAR(fname, run, logger):
         return
 
     if len(dos_values) == n_dos:
-        dos = run.section_single_configuration_calculation[0].m_create(section_dos)
-        dos.dos_kind = 'electronic'
-        dos.number_of_dos_values = n_dos
-        dos.dos_energies = energies * units.eV
-        dos.dos_values = np.array(list(zip(*dos_values))) / eV
-        # FIXME: it is not clear if we should do this or if this is done
-        # by normalizer (LOBSTER energies are already normalized)
-        dos.dos_energies_normalized = energies * units.eV
-        dos.dos_values_normalized = dos.dos_values / cell_volume.to_base_units().magnitude / n_atoms
-        # FIXME: the usage of other parsers and definition of dos_integrated_values
-        # is inconsistent, recheck later when it is cleared, follow the definition
-        # for now (add the core electrons)
+        dos = run.calculation[0].m_create(Dos, Calculation.dos_electronic)
+        dos.n_energies = n_dos
+        dos.energies = energies * units.eV
+        value = list(zip(*dos_values))
         n_electrons = sum(atomic_numbers)
         index = (np.abs(energies)).argmin()
         # integrated dos at the Fermi level should be the number of electrons
         n_valence_electrons = int(round(sum(integral_dos[index])))
         n_core_electrons = n_electrons - n_valence_electrons
-        dos.dos_integrated_values = np.array(list(zip(*integral_dos))) + n_core_electrons / len(integral_dos[0])
+        value_integrated = np.array(list(zip(*integral_dos))) + n_core_electrons / len(integral_dos[0])
+        for spin_i in range(len(value)):
+            dos_total = dos.m_create(DosValues, Dos.total)
+            dos_total.spin = spin_i
+            dos_total.value = value[spin_i] * (1 / units.eV)
+            dos_total.value_integrated = value_integrated[spin_i]
     else:
         logger.warning('Unable to parse total dos from DOSCAR.lobster, \
                             it doesn\'t contain enough dos values')
         return
 
-    for i, pdos in enumerate(atom_projected_dos_values):
-        if len(pdos) == n_dos:
-            section_pdos = run.section_single_configuration_calculation[0].m_create(
-                x_lobster_section_atom_projected_dos)
-            section_pdos.x_lobster_number_of_dos_values = n_dos
-            # FIXME: should the atoms be indexed from 0 or 1?
-            section_pdos.x_lobster_atom_projected_dos_atom_index = i + 1
-            section_pdos.x_lobster_atom_projected_dos_m_kind = 'real_orbital'
-            section_pdos.x_lobster_number_of_lm_atom_projected_dos = len(lms[i])
-            section_pdos.x_lobster_atom_projected_dos_energies = energies * units.eV
-            section_pdos.x_lobster_atom_projected_dos_lm = [translate_lm(lm) for lm in lms[i]]
-            if len(lms[i]) == len(pdos[0]):
-                # we have the same lm-projections for spin up and dn
-                section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
-                    [[lmdos] for lmdos in zip(*pdos)]) / eV
-            elif len(lms[i]) * 2 == len(pdos[0]):
-                pdos_up = list(zip(*pdos))[0::2]
-                pdos_dn = list(zip(*pdos))[1::2]
-                section_pdos.x_lobster_atom_projected_dos_values_lm = np.array(
-                    [[a, b] for a, b in zip(pdos_up, pdos_dn)]) / eV
-            else:
-                logger.warning('Unexpected number of columns in DOSCAR.lobster')
-                return
-        else:
+    for atom_i, pdos in enumerate(atom_projected_dos_values):
+        if len(pdos) != n_dos:
             logger.warning('Unable to parse atom lm-projected dos from DOSCAR.lobster, \
                             it doesn\'t contain enough dos values')
+            continue
+
+        if len(lms[atom_i]) == len(pdos[0]):
+            # we have the same lm-projections for spin up and dn
+            dos_values = np.array([[lmdos] for lmdos in zip(*pdos)]) / eV
+        elif len(lms[atom_i]) * 2 == len(pdos[0]):
+            pdos_up = list(zip(*pdos))[0::2]
+            pdos_dn = list(zip(*pdos))[1::2]
+            dos_values = np.array([[a, b] for a, b in zip(pdos_up, pdos_dn)]) / eV
+        else:
+            logger.warning('Unexpected number of columns in DOSCAR.lobster')
+            return
+        for lm_i, lm in enumerate(lms[atom_i]):
+            for spin_i in range(len(dos_values[lm_i])):
+                section_pdos = dos.m_create(DosValues, Dos.atom_projected)
+                section_pdos.atom_index = atom_i
+                section_pdos.spin = spin_i
+                section_pdos.m_kind = 'real_orbital'
+                section_pdos.lm = translate_lm(lm)
+                section_pdos.value = dos_values[lm_i][spin_i]
 
 
-mainfile_parser = UnstructuredTextFileParser(quantities=[
+mainfile_parser = TextParser(quantities=[
     Quantity('program_version', r'^LOBSTER\s*v([\d\.]+)\s*', repeats=False),
     Quantity('datetime', r'starting on host \S* on (\d{4}-\d\d-\d\d\sat\s\d\d:\d\d:\d\d)\s[A-Z]{3,4}',
              repeats=False),
@@ -371,13 +357,13 @@ mainfile_parser = UnstructuredTextFileParser(quantities=[
     Quantity('x_lobster_basis',
              r'setting up local basis functions...\s*((?:[a-zA-Z]{1,2}\s+\(.+\)(?:\s+\d\S+)+\s+)+)',
              repeats=False,
-             sub_parser=UnstructuredTextFileParser(quantities=[
+             sub_parser=TextParser(quantities=[
                  Quantity('x_lobster_basis_species',
                           r'([a-zA-Z]+){1,2}\s+\((.+)\)((?:\s+\d\S+)+)\s+', repeats=True)
              ])),
     Quantity('spilling', r'((?:spillings|abs. tot)[\s\S]*?charge\s*spilling:\s*\d+\.\d+%)',
              repeats=True,
-             sub_parser=UnstructuredTextFileParser(quantities=[
+             sub_parser=TextParser(quantities=[
                  Quantity('abs_total_spilling',
                           r'abs.\s*total\s*spilling:\s*(\d+\.\d+)%', repeats=False),
                  Quantity('abs_charge_spilling',
@@ -396,21 +382,22 @@ class LobsterParser(FairdiParser):
             mainfile_contents_re=(r'^LOBSTER\s*v[\d\.]+.*'),
         )
 
-    def parse(self, mainfile: str, archive: EntryArchive, logger):
+    def parse(self, mainfile: str, archive: EntryArchive, logger=None):
         mainfile_parser.mainfile = mainfile
         mainfile_path = path.dirname(mainfile)
         mainfile_parser.parse()
 
         run = archive.m_create(Run)
 
-        run.program_name = 'LOBSTER'
-        run.program_version = str(mainfile_parser.get('program_version'))
+        run.program = Program(
+            name='LOBSTER',
+            version=str(mainfile_parser.get('program_version')))
         # FIXME: There is a timezone info present as well, but datetime support for timezones
         # is bad and it doesn't support some timezones (for example CEST).
         # That leads to test failures, so ignore it for now.
         date = datetime.datetime.strptime(' '.join(mainfile_parser.get('datetime')),
                                           '%Y-%m-%d at %H:%M:%S') - datetime.datetime(1970, 1, 1)
-        run.time_run_wall_start = date.total_seconds()
+        run.time_run = TimeRun(wall_start=date.total_seconds())
         code = mainfile_parser.get('x_lobster_code')
 
         # parse structure
@@ -424,23 +411,24 @@ class LobsterParser(FairdiParser):
                 logger.warning('Parsing of {} structure is not supported'.format(code))
         if 'structure' in locals():
             system = run.m_create(System)
-            system.lattice_vectors = structure.get_cell() * units.angstrom
-            system.atom_labels = structure.get_chemical_symbols()
-            system.configuration_periodic_dimensions = structure.get_pbc()
-            system.atom_positions = structure.get_positions() * units.angstrom
+            system.atoms = Atoms(
+                lattice_vectors=structure.get_cell() * units.angstrom,
+                labels=structure.get_chemical_symbols(),
+                periodic=structure.get_pbc(),
+                positions=structure.get_positions() * units.angstrom)
 
         if mainfile_parser.get('finished') is not None:
-            run.run_clean_end = True
+            run.clean_end = True
         else:
-            run.run_clean_end = False
+            run.clean_end = False
 
-        scc = run.m_create(SCC)
+        scc = run.m_create(Calculation)
         method = run.m_create(Method)
-        scc.single_configuration_to_calculation_method_ref = method
+        scc.method_ref = method
 
         spilling = mainfile_parser.get('spilling')
         if spilling is not None:
-            method.number_of_spin_channels = len(spilling)
+            method.electronic = Electronic(n_spin_channels=len(spilling))
             total_spilling = []
             charge_spilling = []
             for s in spilling:
@@ -462,7 +450,7 @@ class LobsterParser(FairdiParser):
         if basis is not None:
             species = basis.get('x_lobster_basis_species')
             if species is not None:
-                method.basis_set = species[0][1]
+                method.basis_set.append(BasisSet(name=species[0][1]))
 
         parse_ICOXPLIST(mainfile_path + '/ICOHPLIST.lobster', scc, 'h')
         parse_ICOXPLIST(mainfile_path + '/ICOOPLIST.lobster', scc, 'o')
@@ -474,5 +462,5 @@ class LobsterParser(FairdiParser):
 
         parse_DOSCAR(mainfile_path + '/DOSCAR.lobster', run, logger)
 
-        if run.section_system:
-            scc.single_configuration_calculation_to_system_ref = run.section_system[0]
+        if run.system:
+            scc.system_ref = run.system[0]

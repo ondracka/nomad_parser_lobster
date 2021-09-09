@@ -21,15 +21,13 @@ import numpy as np
 from nomad.metainfo import (
     Section, Quantity, MSection, SubSection, SectionProxy, Package
 )
-from nomad.datamodel.metainfo import public
+from nomad.datamodel.metainfo import simulation
 
 
-m_package = Package(
-    name='lobster_nomadmetainfo_json',
-    description='None')
+m_package = Package()
 
 
-class section_single_configuration_calculation(public.section_single_configuration_calculation):
+class Calculation(simulation.calculation.Calculation):
 
     m_def = Section(validate=False, extends_base_section=True)
 
@@ -60,7 +58,7 @@ class section_single_configuration_calculation(public.section_single_configurati
         repeats=True)
 
 
-class section_method(public.section_method):
+class Method(simulation.method.Method):
 
     m_def = Section(validate=False, extends_base_section=True)
 

@@ -56,14 +56,14 @@ def test_Fe(parser):
     archive = EntryArchive()
     parser.parse('tests/Fe/lobsterout', archive, logging)
 
-    run = archive.section_run[0]
-    assert run.program_name == "LOBSTER"
-    assert run.run_clean_end is True
-    assert run.program_version == "4.0.0"
-    assert run.time_run_wall_start.magnitude == 1619687985
+    run = archive.run[0]
+    assert run.program.name == "LOBSTER"
+    assert run.clean_end is True
+    assert run.program.version == "4.0.0"
+    assert run.time_run.wall_start.magnitude == 1619687985
 
-    assert len(run.section_single_configuration_calculation) == 1
-    scc = run.section_single_configuration_calculation[0]
+    assert len(run.calculation) == 1
+    scc = run.calculation[0]
     assert len(scc.x_lobster_abs_total_spilling) == 2
     assert scc.x_lobster_abs_total_spilling[0] == approx(8.02)
     assert scc.x_lobster_abs_total_spilling[1] == approx(8.96)
@@ -71,10 +71,10 @@ def test_Fe(parser):
     assert scc.x_lobster_abs_charge_spilling[0] == approx(2.97)
     assert scc.x_lobster_abs_charge_spilling[1] == approx(8.5)
 
-    method = run.section_method
+    method = run.method
     assert len(method) == 1
     assert method[0].x_lobster_code == "VASP"
-    assert method[0].basis_set == "pbeVaspFit2015"
+    assert method[0].basis_set[0].name == "pbeVaspFit2015"
 
     # ICOHPLIST.lobster
     cohp = scc.x_lobster_section_cohp
@@ -181,77 +181,48 @@ def test_Fe(parser):
         eV_to_J(-0.13041))
 
     # CHARGE.lobster
-    atomic_multipoles = scc.section_atomic_multipoles
-    assert len(atomic_multipoles) == 2
-    mulliken = atomic_multipoles[0]
-    assert mulliken.atomic_multipole_kind == "mulliken"
-    assert mulliken.number_of_lm_atomic_multipoles == 1
-    assert np.shape(mulliken.atomic_multipole_lm) == (1, 2)
-    assert all([a == b for a, b in zip(
-        mulliken.atomic_multipole_lm[0], [0, 0])])
-    assert np.shape(mulliken.atomic_multipole_values) == (1, 2)
-    assert mulliken.atomic_multipole_values[0][0] == pytest.approx(0.0 * e, abs=1e-6)
-    assert mulliken.atomic_multipole_values[0][1] == pytest.approx(0.0 * e, abs=1e-6)
+    charges = scc.charges
+    assert len(charges) == 2
+    mulliken = charges[0]
+    assert mulliken.analysis_method == "mulliken"
+    assert np.shape(mulliken.value) == (2,)
+    assert mulliken.value[0] == pytest.approx(0.0 * e, abs=1e-6)
+    assert mulliken.value[1] == pytest.approx(0.0 * e, abs=1e-6)
 
-    loewdin = atomic_multipoles[1]
-    assert loewdin.atomic_multipole_kind == "loewdin"
-    assert loewdin.number_of_lm_atomic_multipoles == 1
-    assert np.shape(loewdin.atomic_multipole_lm) == (1, 2)
-    assert all([a == b for a, b in zip(
-        loewdin.atomic_multipole_lm[0], [0, 0])])
-    assert np.shape(loewdin.atomic_multipole_values) == (1, 2)
-    assert loewdin.atomic_multipole_values[0][0] == pytest.approx(0.0 * e, abs=1e-6)
-    assert loewdin.atomic_multipole_values[0][1] == pytest.approx(0.0 * e, abs=1e-6)
+    loewdin = charges[1]
+    assert loewdin.analysis_method == "loewdin"
+    assert np.shape(loewdin.value) == (2,)
+    assert loewdin.value[0] == pytest.approx(0.0 * e, abs=1e-6)
+    assert loewdin.value[1] == pytest.approx(0.0 * e, abs=1e-6)
 
     # DOSCAR.lobster total and integrated DOS
-    assert len(scc.section_dos) == 1
-    dos = scc.section_dos[0]
-    assert dos.dos_kind == 'electronic'
-    assert dos.number_of_dos_values == 201
-    assert len(dos.dos_energies) == 201
-    assert dos.dos_energies[0].magnitude == approx(eV_to_J(-10.06030))
-    assert dos.dos_energies[16].magnitude == approx(eV_to_J(-9.01508))
-    assert dos.dos_energies[200].magnitude == approx(eV_to_J(3.00503))
-    assert np.shape(dos.dos_values) == (2, 201)
-    assert dos.dos_values[0][6] == pytest.approx(0.0, abs=1e-30)
-    assert dos.dos_values[0][200] == approx(0.26779 / eV)
-    assert dos.dos_values[1][195] == approx(0.37457 / eV)
-    assert np.shape(dos.dos_integrated_values) == (2, 201)
-    assert dos.dos_integrated_values[0][10] == approx(0.0 + 18)
-    assert dos.dos_integrated_values[0][188] == approx(11.07792 + 18)
-    assert dos.dos_integrated_values[1][200] == approx(10.75031 + 18)
+    assert len(scc.dos_electronic) == 1
+    dos = scc.dos_electronic[0]
+    assert dos.n_energies == 201
+    assert len(dos.energies) == 201
+    assert dos.energies[0].magnitude == approx(eV_to_J(-10.06030))
+    assert dos.energies[16].magnitude == approx(eV_to_J(-9.01508))
+    assert dos.energies[200].magnitude == approx(eV_to_J(3.00503))
+    assert len(dos.total) == 2
+    assert np.shape(dos.total[1].value) == (201,)
+    assert dos.total[0].value[6] == pytest.approx(0.0, abs=1e-30)
+    assert dos.total[0].value[200].magnitude == approx(0.26779 / eV)
+    assert dos.total[1].value[195].magnitude == approx(0.37457 / eV)
+    assert np.shape(dos.total[0].value_integrated) == (201,)
+    assert dos.total[0].value_integrated[10] == approx(0.0 + 18)
+    assert dos.total[0].value_integrated[188] == approx(11.07792 + 18)
+    assert dos.total[1].value_integrated[200] == approx(10.75031 + 18)
 
     # DOSCAR.lobster atom and lm-projected dos
-    assert len(scc.x_lobster_section_atom_projected_dos) == 2
-    ados1 = scc.x_lobster_section_atom_projected_dos[0]
-    ados2 = scc.x_lobster_section_atom_projected_dos[1]
-    ados1.x_lobster_atom_projected_dos_atom_index == 1
-    ados2.x_lobster_atom_projected_dos_atom_index == 2
-    assert ados2.x_lobster_number_of_dos_values == 201
-    assert len(ados2.x_lobster_atom_projected_dos_energies) == 201
-    assert ados2.x_lobster_atom_projected_dos_energies[0].magnitude == approx(
-        eV_to_J(-10.06030))
-    assert ados2.x_lobster_atom_projected_dos_energies[16].magnitude == approx(
-        eV_to_J(-9.01508))
-    assert ados1.x_lobster_atom_projected_dos_energies[200].magnitude == approx(
-        eV_to_J(3.00503))
-    assert ados2.x_lobster_atom_projected_dos_m_kind == 'real_orbital'
-    assert ados2.x_lobster_number_of_lm_atom_projected_dos == 6
-    assert np.shape(ados2.x_lobster_atom_projected_dos_lm) == (6, 2)
-    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
-        ados1.x_lobster_atom_projected_dos_lm,
-        [[0, 0], [2, 3], [2, 2], [2, 0], [2, 1], [2, 4]])])
-    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
-        ados2.x_lobster_atom_projected_dos_lm,
-        [[0, 0], [2, 3], [2, 2], [2, 0], [2, 1], [2, 4]])])
-    assert np.shape(ados1.x_lobster_atom_projected_dos_values_lm) == (6, 2, 201)
-    assert np.shape(ados2.x_lobster_atom_projected_dos_values_lm) == (6, 2, 201)
-    assert ados1.x_lobster_atom_projected_dos_values_lm[2, 1, 190] == approx(
-        0.21304 / eV)
-    assert ados2.x_lobster_atom_projected_dos_values_lm[5, 0, 200] == approx(
-        0.00784 / eV)
-    assert ados2.x_lobster_atom_projected_dos_values_lm[0, 1, 35] == approx(
-        0.01522 / eV)
+    assert len(dos.atom_projected) == 24
+    dos.atom_projected[0].atom_index == 0
+    dos.atom_projected[12].atom_index == 1
+    assert dos.atom_projected[1].m_kind == 'real_orbital'
+    assert (dos.atom_projected[7].lm == [2, 0]).all()
+    assert np.shape(dos.atom_projected[11].value) == (201,)
+    assert dos.atom_projected[5].value[190].magnitude == approx(0.21304 / eV)
+    assert dos.atom_projected[22].value[200].magnitude == approx(0.00784 / eV)
+    assert dos.atom_projected[13].value[35].magnitude == approx(0.01522 / eV)
 
 
 def test_NaCl(parser):
@@ -262,23 +233,23 @@ def test_NaCl(parser):
     archive = EntryArchive()
     parser.parse('tests/NaCl/lobsterout', archive, logging)
 
-    run = archive.section_run[0]
-    assert run.program_name == "LOBSTER"
-    assert run.run_clean_end is True
-    assert run.program_version == "3.2.0"
-    assert run.time_run_wall_start.magnitude == 1619713048
+    run = archive.run[0]
+    assert run.program.name == "LOBSTER"
+    assert run.clean_end is True
+    assert run.program.version == "3.2.0"
+    assert run.time_run.wall_start.magnitude == 1619713048
 
-    assert len(run.section_single_configuration_calculation) == 1
-    scc = run.section_single_configuration_calculation[0]
+    assert len(run.calculation) == 1
+    scc = run.calculation[0]
     assert len(scc.x_lobster_abs_total_spilling) == 1
     assert scc.x_lobster_abs_total_spilling[0] == approx(9.29)
     assert len(scc.x_lobster_abs_charge_spilling) == 1
     assert scc.x_lobster_abs_charge_spilling[0] == approx(0.58)
 
-    method = run.section_method
+    method = run.method
     assert len(method) == 1
     assert method[0].x_lobster_code == "VASP"
-    assert method[0].basis_set == "pbeVaspFit2015"
+    assert method[0].basis_set[0].name == "pbeVaspFit2015"
 
     # ICOHPLIST.lobster
     cohp = scc.x_lobster_section_cohp
@@ -371,81 +342,48 @@ def test_NaCl(parser):
         eV_to_J(-0.00580))
 
     # CHARGE.lobster
-    atomic_multipoles = scc.section_atomic_multipoles
-    assert len(atomic_multipoles) == 2
-    mulliken = atomic_multipoles[0]
-    assert mulliken.atomic_multipole_kind == "mulliken"
-    assert mulliken.number_of_lm_atomic_multipoles == 1
-    assert np.shape(mulliken.atomic_multipole_lm) == (1, 2)
-    assert all([a == b for a, b in zip(
-        mulliken.atomic_multipole_lm[0], [0, 0])])
-    assert np.shape(mulliken.atomic_multipole_values) == (1, 8)
+    charges = scc.charges
+    assert len(charges) == 2
+    mulliken = charges[0]
+    assert mulliken.analysis_method == "mulliken"
     # here the approx is not really working (changing the 0.78 to for example
     # 10 makes the test still pass)
-    assert mulliken.atomic_multipole_values[0][0] == approx(0.78 * e)
-    assert mulliken.atomic_multipole_values[0][7] == approx(-0.78 * e)
+    assert mulliken.value[0].magnitude == approx(0.78 * e)
+    assert mulliken.value[7].magnitude == approx(-0.78 * e)
 
-    loewdin = atomic_multipoles[1]
-    assert loewdin.atomic_multipole_kind == "loewdin"
-    assert loewdin.number_of_lm_atomic_multipoles == 1
-    assert np.shape(loewdin.atomic_multipole_lm) == (1, 2)
-    assert all([a == b for a, b in zip(
-        loewdin.atomic_multipole_lm[0], [0, 0])])
-    assert np.shape(loewdin.atomic_multipole_values) == (1, 8)
-    assert loewdin.atomic_multipole_values[0][0] == approx(0.67 * e)
-    assert loewdin.atomic_multipole_values[0][7] == approx(-0.67 * e)
+    loewdin = charges[1]
+    assert loewdin.analysis_method == "loewdin"
+    assert loewdin.value[0].magnitude == approx(0.67 * e)
+    assert loewdin.value[7].magnitude == approx(-0.67 * e)
 
     # DOSCAR.lobster total and integrated DOS
-    assert len(scc.section_dos) == 1
-    dos = scc.section_dos[0]
-    assert dos.dos_kind == 'electronic'
-    assert dos.number_of_dos_values == 201
-    assert len(dos.dos_energies) == 201
-    assert dos.dos_energies[0].magnitude == approx(eV_to_J(-12.02261))
-    assert dos.dos_energies[25].magnitude == approx(eV_to_J(-10.20101))
-    assert dos.dos_energies[200].magnitude == approx(eV_to_J(2.55025))
-    assert np.shape(dos.dos_values) == (1, 201)
-    assert dos.dos_values[0][6] == pytest.approx(0.0, abs=1e-30)
-    assert dos.dos_values[0][162] == approx(20.24722 / eV)
-    assert dos.dos_values[0][200] == pytest.approx(0.0, abs=1e-30)
-    assert np.shape(dos.dos_integrated_values) == (1, 201)
-    assert dos.dos_integrated_values[0][10] == approx(7.99998 + 80)
-    assert dos.dos_integrated_values[0][160] == approx(27.09225 + 80)
-    assert dos.dos_integrated_values[0][200] == approx(31.99992 + 80)
+    assert len(scc.dos_electronic) == 1
+    dos = scc.dos_electronic[0]
+    assert dos.n_energies == 201
+    assert len(dos.energies) == 201
+    assert dos.energies[0].magnitude == approx(eV_to_J(-12.02261))
+    assert dos.energies[25].magnitude == approx(eV_to_J(-10.20101))
+    assert dos.energies[200].magnitude == approx(eV_to_J(2.55025))
+    assert np.shape(dos.total[0].value) == (201,)
+    assert dos.total[0].value[6].magnitude == pytest.approx(0.0, abs=1e-30)
+    assert dos.total[0].value[162].magnitude == approx(20.24722 / eV)
+    assert dos.total[0].value[200].magnitude == pytest.approx(0.0, abs=1e-30)
+    assert np.shape(dos.total[0].value_integrated) == (201,)
+    assert dos.total[0].value_integrated[10] == approx(7.99998 + 80)
+    assert dos.total[0].value_integrated[160] == approx(27.09225 + 80)
+    assert dos.total[0].value_integrated[200] == approx(31.99992 + 80)
 
     # DOSCAR.lobster atom and lm-projected dos
-    assert len(scc.x_lobster_section_atom_projected_dos) == 8
-    ados1 = scc.x_lobster_section_atom_projected_dos[0]
-    ados8 = scc.x_lobster_section_atom_projected_dos[7]
-    ados1.x_lobster_atom_projected_dos_atom_index == 1
-    ados8.x_lobster_atom_projected_dos_atom_index == 8
-    assert ados8.x_lobster_number_of_dos_values == 201
-    assert len(ados8.x_lobster_atom_projected_dos_energies) == 201
-    assert ados1.x_lobster_atom_projected_dos_energies[0].magnitude == approx(
-        eV_to_J(-12.02261))
-    assert ados8.x_lobster_atom_projected_dos_energies[25].magnitude == approx(
-        eV_to_J(-10.20101))
-    assert ados8.x_lobster_atom_projected_dos_energies[200].magnitude == approx(
-        eV_to_J(2.55025))
-    assert ados8.x_lobster_atom_projected_dos_m_kind == 'real_orbital'
-    assert ados1.x_lobster_number_of_lm_atom_projected_dos == 1
-    assert ados8.x_lobster_number_of_lm_atom_projected_dos == 4
-    assert np.shape(ados1.x_lobster_atom_projected_dos_lm) == (1, 2)
-    assert np.shape(ados8.x_lobster_atom_projected_dos_lm) == (4, 2)
-    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
-        ados1.x_lobster_atom_projected_dos_lm,
-        [[0, 0]])])
-    assert all([a[0] == b[0] and a[1] == b[1] for a, b in zip(
-        ados8.x_lobster_atom_projected_dos_lm,
-        [[0, 0], [1, 2], [1, 0], [1, 1]])])
-    assert np.shape(ados1.x_lobster_atom_projected_dos_values_lm) == (1, 1, 201)
-    assert np.shape(ados8.x_lobster_atom_projected_dos_values_lm) == (4, 1, 201)
-    assert ados1.x_lobster_atom_projected_dos_values_lm[0, 0, 190] == pytest.approx(
-        0.0, abs=1e-30)
-    assert ados8.x_lobster_atom_projected_dos_values_lm[3, 0, 141] == approx(
-        0.32251 / eV)
-    assert ados8.x_lobster_atom_projected_dos_values_lm[0, 0, 152] == approx(
-        0.00337 / eV)
+    assert len(dos.atom_projected) == 20
+    dos.atom_projected[0].atom_index == 0
+    dos.atom_projected[19].atom_index == 7
+    assert dos.atom_projected[5].m_kind == 'real_orbital'
+    assert (dos.atom_projected[17].lm == [1, 2]).all()
+    assert np.shape(dos.atom_projected[13].value) == (201,)
+    assert np.shape(dos.atom_projected[8].value) == (201,)
+    assert dos.atom_projected[0].value[190].magnitude == pytest.approx(0.0, abs=1e-30)
+    assert dos.atom_projected[19].value[141].magnitude == approx(0.32251 / eV)
+    assert dos.atom_projected[16].value[152].magnitude == approx(0.00337 / eV)
 
 
 def test_HfV(parser):
@@ -458,30 +396,30 @@ def test_HfV(parser):
     archive = EntryArchive()
     parser.parse('tests/HfV2/lobsterout', archive, logging)
 
-    run = archive.section_run[0]
-    assert run.program_name == "LOBSTER"
-    assert run.run_clean_end is True
-    assert run.program_version == "2.0.0"
+    run = archive.run[0]
+    assert run.program.name == "LOBSTER"
+    assert run.clean_end is True
+    assert run.program.version == "2.0.0"
 
-    assert len(run.section_single_configuration_calculation) == 1
-    scc = run.section_single_configuration_calculation[0]
+    assert len(run.calculation) == 1
+    scc = run.calculation[0]
     assert len(scc.x_lobster_abs_total_spilling) == 1
     assert scc.x_lobster_abs_total_spilling[0] == approx(4.39)
     assert len(scc.x_lobster_abs_charge_spilling) == 1
     assert scc.x_lobster_abs_charge_spilling[0] == approx(2.21)
 
     # backup partial system parsing
-    system = run.section_system
+    system = run.system
     assert len(system) == 1
-    assert len(system[0].atom_species) == 12
-    assert all([a == b for a, b in zip(system[0].atom_species,
+    assert len(system[0].atoms.species) == 12
+    assert all([a == b for a, b in zip(system[0].atoms.species,
                [72, 72, 72, 72, 23, 23, 23, 23, 23, 23, 23, 23])])
-    assert all([a == b for a, b in zip(system[0].configuration_periodic_dimensions,
+    assert all([a == b for a, b in zip(system[0].atoms.periodic,
                [True, True, True])])
 
     # method
-    method = run.section_method
-    assert method[0].basis_set == "Koga"
+    method = run.method
+    assert method[0].basis_set[0].name == "Koga"
 
     # ICOHPLIST.lobster
     cohp = scc.x_lobster_section_cohp
@@ -535,5 +473,5 @@ def test_failed_case(parser):
     archive = EntryArchive()
     parser.parse('tests/failed_case/lobsterout', archive, logging)
 
-    run = archive.section_run[0]
-    assert run.run_clean_end is False
+    run = archive.run[0]
+    assert run.clean_end is False
